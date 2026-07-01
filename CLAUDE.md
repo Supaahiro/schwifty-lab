@@ -29,8 +29,8 @@ Commits are enforced by commitlint via a Husky `commit-msg` hook (`.husky/commit
 ## CI
 
 `.github/workflows/`:
-- `pr-validate-ai-agent.yml` — runs `poetry install` + `pytest` for `projects/ai-agent`, triggered on push to `master` and on pull requests touching `projects/ai-agent/**`.
-- `pr-validate-lint.yml` — runs `yamllint -c .yamllint.yml .` repo-wide.
+- `pr-validate-ai-agent.yml` — runs `poetry install` + `pytest` for `projects/ai-agent`, triggered on push to `master` and on pull requests touching `projects/ai-agent/**`. `pyproject.toml` sets `[tool.pytest.ini_options] pythonpath = ["."]` — without it, `poetry run pytest` (the bare console-script entry point) doesn't add the project root to `sys.path`, and `core`/`main`/`tools` imports fail in CI even though they work locally via `python -m pytest`.
+- `pr-validate-lint.yml` — two jobs: `yamllint -c .yamllint.yml .` repo-wide, and a PowerShell check (`.ps1`/`.psm1`/`.psd1`) that parses every script via `[System.Management.Automation.Language.Parser]::ParseFile()` (never executes them) and checks BOM encoding via PSScriptAnalyzer's `PSUseBOMForUnicodeEncodedFile` rule.
 
 `.github/actions/` and `.github/scripts/` are intentionally empty (see their `README.md`): only extract a composite action or script once something is actually reused or a single step grows past ~3 sub-steps — a lone `poetry install && pytest` stays inline in its workflow.
 
