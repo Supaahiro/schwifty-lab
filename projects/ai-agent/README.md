@@ -148,6 +148,19 @@ See [OpenAI Models docs](https://developers.openai.com/api/docs/models) for the 
 
 The LLM runs locally on your machine. No data leaves your network. Embeddings can also run locally.
 
+### 0. Installing llama.cpp on Windows (CUDA)
+
+If you don't already have a `llama-server` binary, you can grab a prebuilt Windows/CUDA build instead of compiling from source:
+
+1. Install [CUDA Toolkit v13.x](https://developer.nvidia.com/cuda-downloads) (required by the CUDA-accelerated build).
+2. From the [llama.cpp releases page](https://github.com/ggml-org/llama.cpp/releases), download a matching pair of archives for `win-cuda-13.3-x64`:
+   - `cudart-llama-bin-win-cuda-13.3-x64.zip` — CUDA runtime DLLs
+   - `llama-b<build>-bin-win-cuda-13.3-x64.zip` — the `llama-server.exe` binary (e.g. `llama-b9857-bin-win-cuda-13.3-x64.zip`)
+3. Extract both archives into the same folder (e.g. `C:\llama.cpp\`), so the CUDA DLLs sit next to `llama-server.exe`.
+4. Add that folder to your `PATH`, or `cd` into it before running the commands below.
+
+> **Tip:** Always download the `cudart` and `llama-server` archives from the **same build number** (the `b<NNNN>` in the filename) to avoid DLL mismatches.
+
 ### 1. Start the local LLM server
 
 Any OpenAI-compatible runtime works. Example with **llama.cpp server** and
@@ -165,6 +178,28 @@ llama-server \
 
 > **Note:** Do **not** use the `--special` flag — it causes Qwen3's Jinja template to misplace
 > `<|im_end|>` tokens when tool calling is active, resulting in a server 500 error.
+
+#### Verifying the server
+
+Before wiring up the agent, confirm the server responds correctly. Save this as `req.json`:
+
+```json
+{
+  "model": "llama",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant that answers concisely and politely."},
+    {"role": "user", "content": "Hello! How are you?"}
+  ]
+}
+```
+
+Then send it with curl:
+
+```bash
+curl http://localhost:5000/v1/chat/completions -H "Content-Type: application/json" -d @req.json
+```
+
+A successful response confirms the server, model, and chat template are working end to end.
 
 ### 2. Choose an embedding strategy
 
