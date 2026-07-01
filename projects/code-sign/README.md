@@ -9,7 +9,7 @@ Authenticode certificate issued by a **local Certificate Authority (CA)**.
 
 ```
 codesign/
-├── Invoke-ScriptSigning.ps1   # unified signing tool  (start here)
+├── code-sign.ps1              # unified signing tool  (start here)
 ├── README.md                  # this file
 └── pki/
     ├── code-sign.cmd          # generates key + CSR + cert + PFX  (run once)
@@ -50,7 +50,7 @@ codesign/
    ```
 
 4. When prompted at step 4, **set a strong password** for the PFX file.
-   You will need this password every time you run `Invoke-ScriptSigning.ps1`.
+   You will need this password every time you run `code-sign.ps1`.
 
 5. Keep the generated files according to this table:
 
@@ -85,7 +85,7 @@ Import-Certificate -FilePath .\pki\ca.crt -CertStoreLocation Cert:\LocalMachine\
 
 ---
 
-## Part 2 — Signing scripts with `Invoke-ScriptSigning.ps1`
+## Part 2 — Signing scripts with `code-sign.ps1`
 
 ### Parameter reference
 
@@ -106,14 +106,14 @@ Supports `-WhatIf` and `-Verbose` (standard PowerShell common parameters).
 
 ```powershell
 # Sign a single script in-place (password prompted)
-.\Invoke-ScriptSigning.ps1 `
+.\code-sign.ps1 `
     -CertificatePath .\pki\code-sign.pfx `
     -SourcePath      .\Deploy.ps1
 ```
 
 ```powershell
 # Sign all scripts in .\src recursively, writing signed copies to .\out
-.\Invoke-ScriptSigning.ps1 `
+.\code-sign.ps1 `
     -CertificatePath .\pki\code-sign.pfx `
     -SourcePath      .\src `
     -DestinationPath .\out `
@@ -122,7 +122,7 @@ Supports `-WhatIf` and `-Verbose` (standard PowerShell common parameters).
 
 ```powershell
 # Add a timestamp so signatures survive certificate expiry (production recommended)
-.\Invoke-ScriptSigning.ps1 `
+.\code-sign.ps1 `
     -CertificatePath .\pki\code-sign.pfx `
     -SourcePath      .\src `
     -Recurse `
@@ -132,7 +132,7 @@ Supports `-WhatIf` and `-Verbose` (standard PowerShell common parameters).
 ```powershell
 # Automation: password from an environment variable (CI/CD)
 $pwd = ConvertTo-SecureString $env:PFX_PASSWORD -AsPlainText -Force
-.\Invoke-ScriptSigning.ps1 `
+.\code-sign.ps1 `
     -CertificatePath     .\pki\code-sign.pfx `
     -CertificatePassword $pwd `
     -SourcePath          .\src `
@@ -141,7 +141,7 @@ $pwd = ConvertTo-SecureString $env:PFX_PASSWORD -AsPlainText -Force
 
 ```powershell
 # Dry run: see what would be signed without modifying any file
-.\Invoke-ScriptSigning.ps1 `
+.\code-sign.ps1 `
     -CertificatePath .\pki\code-sign.pfx `
     -SourcePath      .\src `
     -Recurse `
@@ -169,7 +169,7 @@ Get-AuthenticodeSignature .\Deploy.ps1 | Select-Object Status, StatusMessage, Si
 
 ### Certificate store import
 
-`Invoke-ScriptSigning.ps1` imports the certificate into `Cert:\CurrentUser\My`.
+`code-sign.ps1` imports the certificate into `Cert:\CurrentUser\My`.
 This makes the private key available to any process running as the same user.
 On shared machines consider:
 - Using a dedicated service account for signing.

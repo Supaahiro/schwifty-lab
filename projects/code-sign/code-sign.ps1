@@ -310,6 +310,93 @@ function Convert-SignatureResult {
     }
 }
 
+function Remove-PowerShellSignatureBlock {
+<#
+.SYNOPSIS
+    Strips an existing Authenticode signature block from a PowerShell script file.
+
+.DESCRIPTION
+    PowerShell scripts carry their Authenticode signature as a comment block
+    delimited by '# SIG # Begin signature block' / '# SIG # End signature block'
+    appended at the end of the file.
+
+    Set-AuthenticodeSignature (Windows) replaces an existing block in place, but
+    Set-OpenAuthenticodeSignature (Linux/macOS) appends a *second* block instead
+    of replacing the first. Two stacked blocks make the signature invalid.
+
+    To get deterministic behaviour on every platform this helper removes any
+    pre-existing block before signing. It is a no-op for non-script files
+    (.exe / .dll) and for files that contain no signature block.
+
+    The file's original encoding (UTF-8 with/without BOM, UTF-16 LE/BE) is
+    detected from its byte-order mark and preserved when rewriting, so the
+    cleaned content hashes identically to the original sans-signature script.
+
+.PARAMETER FilePath
+    Absolute path of the file to clean.
+
+.OUTPUTS
+    System.Boolean. $true when a block was removed, $false otherwise.
+#>
+    [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([bool])]
+    param(
+        [string] $FilePath
+    )
+
+    $scriptExtensions = @('.ps1', '.psm1', '.psd1')
+    if ($scriptExtensions -notcontains [IO.Path]::GetExtension($FilePath)) {
+        return $false
+    }
+
+    $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+    if ($bytes.Length -eq 0) { return $false }
+
+    # Detect the encoding from the byte-order mark so the file is rewritten in a
+    # form compatible with the original (a different encoding would change every
+    # byte and could break callers that read the script with a fixed encoding).
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        $encoding = New-Object System.Text.UTF8Encoding($true)   # UTF-8 with BOM
+    }
+    elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) {
+        $encoding = [System.Text.Encoding]::Unicode              # UTF-16 LE
+    }
+    elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF) {
+        $encoding = [System.Text.Encoding]::BigEndianUnicode     # UTF-16 BE
+    }
+    else {
+        $encoding = New-Object System.Text.UTF8Encoding($false)  # UTF-8 no BOM
+    }
+
+    $text = $encoding.GetString($bytes)
+    # Drop a decoded BOM character if present so it is not duplicated on write.
+    if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) {
+        $text = $text.Substring(1)
+    }
+
+    # The Authenticode signature block always starts at column 0. Anchor the
+    # match to the beginning of a line (multiline mode) so an occurrence of the
+    # marker embedded mid-line in a string or comment -- such as this script's
+    # own comment-based help -- is not mistaken for the real block, which would
+    # truncate the script at the wrong place. Taking the first line-anchored
+    # match also correctly removes stacked blocks (Set-OpenAuthenticodeSignature
+    # appends a second one) from the first real block onward.
+    $match = [regex]::Match($text, '^# SIG # Begin signature block', [System.Text.RegularExpressions.RegexOptions]::Multiline)
+    if (-not $match.Success) { return $false }
+    $idx = $match.Index
+
+    if (-not $PSCmdlet.ShouldProcess($FilePath, 'Remove existing signature block')) {
+        return $false
+    }
+
+    # Truncate at the marker, drop the blank line(s) that precede it, and
+    # terminate the cleaned script with a single trailing newline.
+    $clean = $text.Substring(0, $idx).TrimEnd("`r", "`n", ' ', "`t") + "`r`n"
+
+    [System.IO.File]::WriteAllText($FilePath, $clean, $encoding)
+    return $true
+}
+
 function Invoke-FileSign {
 <#
 .SYNOPSIS
@@ -320,6 +407,9 @@ function Invoke-FileSign {
     Set-AuthenticodeSignature (Windows) and normalises the result.
     Returns $true on success, $false on failure (failure details are
     written via Write-Warning).
+
+    Any pre-existing signature block is stripped first (see
+    Remove-PowerShellSignatureBlock) to avoid stacking signature blocks.
 
 .PARAMETER FilePath
     Absolute path of the file to sign.
@@ -339,6 +429,12 @@ function Invoke-FileSign {
         [System.Security.Cryptography.X509Certificates.X509Certificate2] $Certificate,
         [string] $TimestampServer
     )
+
+    # Remove any existing signature block before (re)signing so platforms that
+    # append rather than replace do not produce a stacked, invalid signature.
+    if (Remove-PowerShellSignatureBlock -FilePath $FilePath) {
+        Write-Verbose "  Removed existing signature block from $FilePath"
+    }
 
     if ($IsLinux -or $IsMacOS) {
         $params = @{
