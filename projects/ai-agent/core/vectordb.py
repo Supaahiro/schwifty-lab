@@ -129,21 +129,37 @@ def vdb_builder(
             name=collection_name, embedding_function=None)
 
         doc_contents = [doc.page_content if hasattr(doc, "page_content") else str(doc) for doc in docs_chunks]
-        doc_ids = []
-        for i, doc in enumerate(docs_chunks):
-            doc_id = doc.metadata.get("source", "")
-            if not doc_id:
-                doc_id = f"Unknown Source [{hashlib.sha256(doc_contents[i].encode('utf-8')).hexdigest()}]"
-            doc_ids.append(doc_id)
         doc_metadatas = [doc.metadata for doc in docs_chunks]
-        embeddings_list = embeddings.embed_documents(doc_contents)
-        collection.upsert(
-            ids=doc_ids,
-            documents=doc_contents,
-            embeddings=embeddings_list,
-            metadatas=doc_metadatas,
+
+        # ID = source path + a content hash, so:
+        #  - chunks are unique even when several come from the same source file
+        #    (chromadb rejects duplicate ids in a single upsert call)
+        #  - an edited chunk gets a new id, so it's picked up as "new" below instead
+        #    of being mistaken for an already-embedded, unchanged chunk
+        doc_ids = [
+            f"{doc.metadata.get('source') or 'Unknown Source'}#{hashlib.sha256(doc_contents[i].encode('utf-8')).hexdigest()[:16]}"
+            for i, doc in enumerate(docs_chunks)
+        ]
+
+        existing_ids = set(collection.get(ids=doc_ids)["ids"]) if doc_ids else set()
+        new_indices = [i for i, doc_id in enumerate(doc_ids) if doc_id not in existing_ids]
+
+        if new_indices:
+            new_ids = [doc_ids[i] for i in new_indices]
+            new_contents = [doc_contents[i] for i in new_indices]
+            new_metadatas = [doc_metadatas[i] for i in new_indices]
+            new_embeddings = embeddings.embed_documents(new_contents)
+            collection.upsert(
+                ids=new_ids,
+                documents=new_contents,
+                embeddings=new_embeddings,
+                metadatas=new_metadatas,
+            )
+
+        print(
+            f"ChromaDB collection '{collection_name}': embedded {len(new_indices)} new/changed "
+            f"chunk(s), {len(doc_ids) - len(new_indices)} already up to date."
         )
-        print(f"ChromaDB collection '{collection_name}' updated with {len(docs_chunks)} documents.")
 
         retriever = VectorStoreRetriever(
             vectorstore=Chroma(
