@@ -1,55 +1,48 @@
 from dotenv import load_dotenv
 from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
+from langgraph.graph.state import CompiledStateGraph
 
 from agent import build_agent, print_graph
 from core.config import Config
 from core.vectordb import build_embeddings, vdb_builder
+from providers import PROVIDERS
 from tools import load_all_tools
 
-# Load secrets from .env (OPENAI_API_KEY, optional LangSmith vars)
-load_dotenv()
 
-# Load and validate configuration
-cfg = Config.load_from_file("config.json")
+def build_app(cfg: Config) -> CompiledStateGraph:
+    """Builds the chat model, tools, and compiled LangGraph agent from a loaded Config."""
 
-# Build the chat model from the configured provider
-if cfg.provider == "openai":
-    from providers.openai import build_chat_model
-    assert cfg.openai is not None  # guaranteed by model_validator
-    llm = build_chat_model(cfg.openai)
-elif cfg.provider == "llamacpp":
-    from providers.llamacpp import build_chat_model
-    assert cfg.llamacpp is not None  # guaranteed by model_validator
-    llm = build_chat_model(cfg.llamacpp)
-else:
-    raise ValueError(f"Unknown provider '{cfg.provider}'. Check config.json.")
+    provider_config = cfg.openai if cfg.provider == "openai" else cfg.llamacpp
+    build_chat_model = PROVIDERS.get(cfg.provider)
+    if build_chat_model is None or provider_config is None:
+        raise ValueError(f"Unknown provider '{cfg.provider}'. Check config.json.")
+    llm = build_chat_model(provider_config)
 
-# Build embeddings (configured independently of the chat model provider)
-embeddings = build_embeddings(
-    embedding_provider=cfg.vectordb.embedding_provider,
-    embedding_name=cfg.vectordb.embedding_name,
-    embedding_base_url=cfg.vectordb.embedding_base_url,
-    embedding_api_key_env=cfg.vectordb.embedding_api_key_env,
-)
+    # Build embeddings (configured independently of the chat model provider)
+    embeddings = build_embeddings(
+        embedding_provider=cfg.vectordb.embedding_provider,
+        embedding_name=cfg.vectordb.embedding_name,
+        embedding_base_url=cfg.vectordb.embedding_base_url,
+        embedding_api_key_env=cfg.vectordb.embedding_api_key_env,
+    )
 
-# Build the vector DB retriever closure (lazy — no I/O until first query)
-retriever_builder = vdb_builder(
-    embeddings=embeddings,
-    path=str(cfg.vectordb.docs_path),
-    glob=cfg.vectordb.docs_glob,
-    db_path=str(cfg.vectordb.db_path),
-    collection_name=cfg.vectordb.collection_name,
-    recreate=False,
-)
+    # Build the vector DB retriever closure (lazy — no I/O until first query)
+    retriever_builder = vdb_builder(
+        embeddings=embeddings,
+        path=str(cfg.vectordb.docs_path),
+        glob=cfg.vectordb.docs_glob,
+        db_path=str(cfg.vectordb.db_path),
+        collection_name=cfg.vectordb.collection_name,
+        recreate=False,
+    )
 
-# Load all agent tools
-all_tools = load_all_tools(
-    vdb_builder=retriever_builder,
-    memory_path=str(cfg.agent.memory_path),
-)
+    # Load all agent tools
+    all_tools = load_all_tools(
+        vdb_builder=retriever_builder,
+        memory_path=str(cfg.agent.memory_path),
+    )
 
-# Compile the LangGraph agent
-app = build_agent(llm, all_tools)
+    return build_agent(llm, all_tools)
 
 
 def _trim_history(messages: list[BaseMessage], window: int) -> list[BaseMessage]:
@@ -72,6 +65,10 @@ def _trim_history(messages: list[BaseMessage], window: int) -> list[BaseMessage]
 
 def main() -> None:
     """Runs the AI agent in an interactive REPL loop."""
+
+    load_dotenv()  # Load secrets from .env (OPENAI_API_KEY, optional LangSmith vars)
+    cfg = Config.load_from_file("config.json")
+    app = build_app(cfg)
 
     print("🤖 Welcome to the AI Agent. You can ask questions about the loaded documents.\n")
     print_graph(app, "ascii")
