@@ -1,0 +1,10 @@
+mode: ContinuousDeployment
+
+branches:
+  master:
+    regex: ^master$
+    label: ""
+    increment: Patch
+    prevent-increment:
+      of-merged-branch: false
+    is-main-branch: true
