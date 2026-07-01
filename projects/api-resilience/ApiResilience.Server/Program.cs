@@ -32,12 +32,15 @@ builder.Services.AddProblemDetails(options =>
         // Sets the instance to the HTTP method and path of the request.
         context.ProblemDetails.Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
 
+        // Cache the extensions dictionary to avoid repeating the member-access chain.
+        var extensions = context.ProblemDetails.Extensions;
+
         // Adds the request ID to the problem details extensions.
-        context.ProblemDetails.Extensions.TryAdd("messageId", context.HttpContext.TraceIdentifier);
+        extensions.TryAdd("messageId", context.HttpContext.TraceIdentifier);
 
         // Adds the trace ID from the activity feature to the problem details extensions.
         var activity = context.HttpContext.Features.Get<IHttpActivityFeature>()?.Activity;
-        context.ProblemDetails.Extensions.TryAdd("traceId", activity);
+        extensions.TryAdd("traceId", activity);
     };
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -103,6 +106,6 @@ app.MapGet("/weatherforecast", async (ServerSettingsService settingsService) =>
           .ToArray();
     return forecast;
 })
-.WithName("GetWeatherForecast");
+.WithName("GetWeatherForecast").AllowAnonymous();
 
 app.Run();
