@@ -18,6 +18,13 @@ spec:
         volumeMounts:
         - name: persistent-storage
           mountPath: /usr/share/nginx/html
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: 100m
+          requests:
+            memory: 64Mi
+            cpu: 50m
       volumes:
       - name: persistent-storage
         persistentVolumeClaim:

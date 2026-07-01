@@ -10,12 +10,26 @@ spec:
     volumeMounts:
     - name: shared-data
       mountPath: /data
+    resources:
+      limits:
+        memory: 64Mi
+        cpu: 50m
+      requests:
+        memory: 32Mi
+        cpu: 25m
   - name: reader
     image: busybox:1.37
     command: ["/bin/sh", "-c", "tail -f /data/time.log"]
     volumeMounts:
     - name: shared-data
       mountPath: /data
+    resources:
+      limits:
+        memory: 64Mi
+        cpu: 50m
+      requests:
+        memory: 32Mi
+        cpu: 25m
   volumes:
   - name: shared-data
     emptyDir: {}

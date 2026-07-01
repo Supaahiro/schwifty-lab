@@ -16,3 +16,10 @@ spec:
       containers:
         - name: app
           image: nginx:1.29.3-perl
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: 100m
+            requests:
+              memory: 64Mi
+              cpu: 50m

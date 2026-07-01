@@ -17,6 +17,13 @@ spec:
       - name: node-monitor
         image: busybox:1.37
         command: ["sh", "-c", "echo Running on $(hostname); sleep 3600"]
+        resources:
+          limits:
+            memory: 64Mi
+            cpu: 50m
+          requests:
+            memory: 32Mi
+            cpu: 25m
       tolerations:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists

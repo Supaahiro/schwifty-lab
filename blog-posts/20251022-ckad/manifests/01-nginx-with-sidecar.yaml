@@ -9,12 +9,26 @@ spec:
     volumeMounts:
     - name: logs
       mountPath: /var/log/nginx
+    resources:
+      limits:
+        memory: 128Mi
+        cpu: 100m
+      requests:
+        memory: 64Mi
+        cpu: 50m
   - name: sidecar
     image: busybox:1.37
     command: ["/bin/sh", "-c", "tail -F /var/log/nginx/access.log"]
     volumeMounts:
     - name: logs
       mountPath: /var/log/nginx
+    resources:
+      limits:
+        memory: 64Mi
+        cpu: 50m
+      requests:
+        memory: 32Mi
+        cpu: 25m
   volumes:
   - name: logs
     emptyDir: {}
