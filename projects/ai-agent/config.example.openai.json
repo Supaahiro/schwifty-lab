@@ -4,5 +4,17 @@
     "model": "gpt-5-mini",
     "base_url": null,
     "api_key_env": "OPENAI_API_KEY"
+  },
+  "vectordb": {
+    "embedding_provider": "openai",
+    "embedding_name": "text-embedding-3-small",
+    "docs_path": "../../assets/docs",
+    "docs_glob": "**/*.md",
+    "db_path": "../../assets/chroma_db",
+    "collection_name": "internal_kb"
+  },
+  "agent": {
+    "memory_path": "../../assets/bot_memory.json",
+    "history_window": 10
   }
 }
