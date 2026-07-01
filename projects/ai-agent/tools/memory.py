@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from pydantic import BaseModel, Field
 from langchain.tools import BaseTool, tool
 
 
 class AgentMemory(BaseModel):
-    user_info: Dict[str, Any] = Field(
+    user_info: dict[str, Any] = Field(
         description="Informations about the user.", default_factory=dict
     )
 
@@ -46,14 +46,14 @@ def load_agent_memory(file_path: str) -> AgentMemory:
     return AgentMemory(**data)
 
 
-def get_memory_tools(file_path: str) -> List[BaseTool]:
+def get_memory_tools(file_path: str) -> list[BaseTool]:
     """
     It returns the tools to get and update the bot memory stored in a JSON file.
 
     Args:
         file_path (str): Path to the JSON file where the memory is stored.
     Returns:
-        List[BaseTool]: A list containing the get_memory and update_memory tools.
+        list[BaseTool]: A list containing the get_memory and update_memory tools.
     """
 
     @tool
@@ -116,7 +116,7 @@ def get_memory_tools(file_path: str) -> List[BaseTool]:
 
             # Merge any other top-level keys into user_info (useful if agent sends {"favorite_color":"blue"})
             extra_top_level = {
-                k: v for k, v in incoming.items() if k not in ("user_info")
+                k: v for k, v in incoming.items() if k != "user_info"
             }
             if extra_top_level:
                 memory.user_info.update(extra_top_level)

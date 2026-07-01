@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -9,7 +8,7 @@ class OpenAIConfig(BaseModel):
     """Configuration for the OpenAI provider."""
 
     model: str = Field(..., min_length=1, description="Chat model name (e.g. 'gpt-4o-mini')")
-    base_url: Optional[str] = Field(
+    base_url: str | None = Field(
         default=None,
         description="Optional custom base URL for OpenAI-compatible local servers",
     )
@@ -24,7 +23,7 @@ class LlamaCppConfig(BaseModel):
 
     model: str = Field(..., min_length=1, description="Model name as expected by the local server")
     base_url: str = Field(..., description="OpenAI-compatible API endpoint (e.g. 'http://localhost:8080/v1')")
-    extra_body: Optional[dict] = Field(
+    extra_body: dict | None = Field(
         default=None,
         description="Extra fields to pass in every request body (e.g. {'chat_template_kwargs': {'enable_thinking': false}})",
     )
@@ -38,7 +37,7 @@ class VectorDBConfig(BaseModel):
         description="Provider for embeddings: 'openai' (remote or local-compatible) or 'huggingface' (local, no API key required)",
     )
     embedding_name: str = Field(..., min_length=1, description="Embedding model name")
-    embedding_base_url: Optional[str] = Field(
+    embedding_base_url: str | None = Field(
         default=None,
         description="Optional custom base URL for OpenAI-compatible local embedding servers (e.g. Ollama, llama.cpp)",
     )
@@ -63,8 +62,8 @@ class Config(BaseModel):
     """Top-level configuration model for the AI agent application."""
 
     provider: str = Field(..., description="Active LLM provider: 'openai' or 'llamacpp'")
-    openai: Optional[OpenAIConfig] = None
-    llamacpp: Optional[LlamaCppConfig] = None
+    openai: OpenAIConfig | None = None
+    llamacpp: LlamaCppConfig | None = None
     vectordb: VectorDBConfig
     agent: AgentConfig
 
