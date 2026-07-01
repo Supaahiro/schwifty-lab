@@ -8,6 +8,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 
 import chromadb
+import hashlib
 import os
 
 
@@ -118,10 +119,11 @@ def vdb_builder(
     def _builder_function() -> VectorStoreRetriever:
         docs_chunks = vbd_load_documents(path, glob)
 
-        client = chromadb.PersistentClient(path=db_path)
-        if recreate or not os.path.exists(db_path):
+        client = chromadb.PersistentClient(
+            path=db_path, settings=chromadb.config.Settings(allow_reset=True))
+        if recreate:
             client.reset()
-            print(f"Initialized ChromaDB at {db_path}")
+            print(f"Reset ChromaDB at {db_path}")
 
         collection = client.get_or_create_collection(
             name=collection_name, embedding_function=None)
@@ -131,7 +133,7 @@ def vdb_builder(
         for i, doc in enumerate(docs_chunks):
             doc_id = doc.metadata.get("source", "")
             if not doc_id:
-                doc_id = f"Unknown Source [{str(hash(doc_contents[i]))}]"
+                doc_id = f"Unknown Source [{hashlib.sha256(doc_contents[i].encode('utf-8')).hexdigest()}]"
             doc_ids.append(doc_id)
         doc_metadatas = [doc.metadata for doc in docs_chunks]
         embeddings_list = embeddings.embed_documents(doc_contents)
