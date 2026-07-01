@@ -1,0 +1,34 @@
+name: pr-validate-ai-agent
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'projects/ai-agent/**'
+      - '.github/workflows/pr-validate-ai-agent.yml'
+  pull_request:
+    paths:
+      - 'projects/ai-agent/**'
+      - '.github/workflows/pr-validate-ai-agent.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/ai-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run tests
+        run: poetry run pytest -v

@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    target-branch: "master"
+
+  - package-ecosystem: pip
+    directory: /projects/ai-agent
+    schedule:
+      interval: weekly
+    target-branch: "master"
+
+  - package-ecosystem: bundler
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: "master"
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: "master"
