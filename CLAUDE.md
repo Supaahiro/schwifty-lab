@@ -34,7 +34,7 @@ Commits are enforced by commitlint via a Husky `commit-msg` hook (`.husky/commit
 
 `.github/actions/` and `.github/scripts/` are intentionally empty (see their `README.md`): only extract a composite action or script once something is actually reused or a single step grows past ~3 sub-steps — a lone `poetry install && pytest` stays inline in its workflow.
 
-`.github/dependabot.yml` tracks `github-actions`, `pip` (`projects/ai-agent`), `bundler` (root `Gemfile`), and `npm` (root `package.json`), weekly, targeting `master`.
+`.github/dependabot.yml` tracks `github-actions`, `pip` (`projects/ai-agent`), and `npm` (root `package.json`), weekly, targeting `master`. No `bundler` entry: the root `Gemfile` has a local path dependency (`blog-jekyll-theme`, a sibling repo) that Dependabot's isolated environment can never reach, which fails every run for that ecosystem outright.
 
 ## Common commands
 

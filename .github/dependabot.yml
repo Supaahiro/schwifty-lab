@@ -15,12 +15,6 @@ updates:
       interval: weekly
     target-branch: "master"
 
-  - package-ecosystem: bundler
-    directory: /
-    schedule:
-      interval: weekly
-    target-branch: "master"
-
   - package-ecosystem: npm
     directory: /
     schedule:
