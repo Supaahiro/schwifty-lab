@@ -20,3 +20,44 @@ jobs:
 
       - name: Run yamllint
         run: yamllint -c .yamllint.yml .
+
+  powershell-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PowerShell scripts (BOM + parse)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -Repository PSGallery
+
+          $scripts = Get-ChildItem -Recurse -Include *.ps1, *.psm1, *.psd1 -File |
+            Where-Object { $_.FullName -notmatch '[\\/](node_modules|_site|vendor)[\\/]' }
+
+          $failed = $false
+
+          foreach ($script in $scripts) {
+            Write-Host "Checking $($script.FullName)"
+
+            # Parse-only syntax check — never executes the script.
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $script.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            foreach ($parseError in $parseErrors) {
+              Write-Host "::error file=$($script.FullName)::Parse error: $parseError"
+              $failed = $true
+            }
+
+            # BOM check via PSScriptAnalyzer.
+            $bomResults = Invoke-ScriptAnalyzer -Path $script.FullName -IncludeRule PSUseBOMForUnicodeEncodedFile
+            foreach ($result in $bomResults) {
+              Write-Host "::error file=$($script.FullName),line=$($result.Line)::$($result.Message)"
+              $failed = $true
+            }
+          }
+
+          if ($failed) {
+            exit 1
+          }
