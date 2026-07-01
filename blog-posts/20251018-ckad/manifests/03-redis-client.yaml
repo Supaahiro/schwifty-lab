@@ -9,12 +9,12 @@ spec:
     - name: python-tester
       image: python:3.12-alpine
       command:
-      - sh 
-      - -c
-      - >
-        pip install --upgrade pip --root-user-action ignore > /dev/null && 
-        pip install redis --root-user-action ignore > /dev/null && 
-        python /scripts/test-redis-ping.py
+        - sh
+        - -c
+        - >
+          pip install --upgrade pip --root-user-action ignore > /dev/null &&
+          pip install redis --root-user-action ignore > /dev/null &&
+          python /scripts/test-redis-ping.py
       env:
         - name: REDIS_HOST
           value: "redis"

@@ -14,7 +14,7 @@ nav:
 remote_theme: supaahiro/blog-jekyll-theme@experimental
 
 plugins:
-- jekyll-remote-theme
+  - jekyll-remote-theme
 
 exclude:
-- projects
+  - projects
