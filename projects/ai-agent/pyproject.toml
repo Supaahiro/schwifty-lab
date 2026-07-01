@@ -11,8 +11,6 @@ requires-python = ">=3.13,<4.0.0"
 
 [tool.poetry.dependencies]
 python-dotenv = "^1.2.2"
-black = "^26.5.1"
-isort = "^8.0.1"
 langchain = "^1.3.11"
 langchain-openai = "^1.3.3"
 langchain-community = "^0.4.2"
@@ -21,11 +19,15 @@ langchain-chroma = "^1.1.0"
 numexpr = "^2.14.1"
 grandalf = "^0.8"
 uv = "^0.11.26"
-pytest = "^9.1.1"
 langgraph-checkpoint = "^4.1.1"
 packaging = "^26.2"
 langchain-huggingface = "^1.2.2"
 sentence-transformers = "^5.6.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^26.5.1"
+isort = "^8.0.1"
+pytest = "^9.1.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

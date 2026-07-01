@@ -76,20 +76,20 @@ def build_agent(llm: BaseChatModel, tools: list[BaseTool]) -> CompiledStateGraph
     return builder.compile()
 
 
-def print_graph(app: CompiledStateGraph, type: Literal["ascii", "mermaid"]) -> None:
+def print_graph(app: CompiledStateGraph, output_format: Literal["ascii", "mermaid"]) -> None:
     """
     Prints a visual representation of the compiled agent graph.
 
     Args:
       app (CompiledStateGraph): The compiled agent graph.
-      type (Literal["ascii", "mermaid"]): Output format.
+      output_format (Literal["ascii", "mermaid"]): Output format.
     """
 
     graph = app.get_graph()
 
-    if type == "ascii":
+    if output_format == "ascii":
         graph.print_ascii()
-    elif type == "mermaid":
+    elif output_format == "mermaid":
         print(graph.draw_mermaid())
     else:
         raise ValueError("Unsupported graph type. Use 'ascii' or 'mermaid'.")
