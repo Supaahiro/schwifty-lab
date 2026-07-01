@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
 
 from agent import build_agent, print_graph
 from core.config import Config
@@ -52,6 +52,24 @@ all_tools = load_all_tools(
 app = build_agent(llm, all_tools)
 
 
+def _trim_history(messages: list[BaseMessage], window: int) -> list[BaseMessage]:
+    """
+    Keeps the last `window` messages without splitting a tool-call/ToolMessage pair.
+
+    A ToolMessage is only valid immediately after the AIMessage whose tool_calls
+    it answers, so the cut point is walked back until it no longer lands on one.
+    """
+
+    if len(messages) <= window:
+        return messages
+
+    cut = len(messages) - window
+    while cut > 0 and isinstance(messages[cut], ToolMessage):
+        cut -= 1
+
+    return messages[cut:]
+
+
 def main() -> None:
     """Runs the AI agent in an interactive REPL loop."""
 
@@ -74,7 +92,7 @@ def main() -> None:
         conversation_history.append(HumanMessage(content=user_input))
 
         result = app.invoke(
-            {"messages": conversation_history[-cfg.agent.history_window:]})
+            {"messages": _trim_history(conversation_history, cfg.agent.history_window)})
         if not result or "messages" not in result:
             print("🤖 Agent: No response from the agent.")
             continue
@@ -82,9 +100,7 @@ def main() -> None:
         response = result["messages"][-1].content if result["messages"] else ""
         print(f"🤖 Agent: {response}")
 
-        conversation_history = result["messages"]
-        if len(conversation_history) > cfg.agent.history_window:
-            conversation_history = conversation_history[-cfg.agent.history_window:]
+        conversation_history = _trim_history(result["messages"], cfg.agent.history_window)
 
 
 if __name__ == "__main__":
