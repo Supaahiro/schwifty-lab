@@ -7,25 +7,26 @@ authors = [
 ]
 license = {text = "**No-Commercial License** (see LICENSE file)"}
 readme = "README.md"
-requires-python = ">=3.12,<4.0.0"
+requires-python = ">=3.13,<4.0.0"
 
 [tool.poetry.dependencies]
-python-dotenv = "^1.2.1"
-black = "^26.1.0"
-isort = "^8.0.0"
-langchain = "^1.2.10"
-langchain-openai = "^1.1.10"
-langchain-community = "^0.4.1"
-langgraph = "^1.0.9"
+python-dotenv = "^1.2.2"
+black = "^26.5.1"
+isort = "^8.0.1"
+langchain = "^1.3.11"
+langchain-openai = "^1.3.3"
+langchain-community = "^0.4.2"
+langgraph = "^1.2.7"
 langchain-chroma = "^1.1.0"
-numexpr = "^2.12.1"
+numexpr = "^2.14.1"
 grandalf = "^0.8"
-uv = "^0.10.4"
-pytest = "^9.0.2"
-langgraph-checkpoint = "^4.0.0"
-packaging = "^26.0"
-langchain-huggingface = "^1.2.1"
-sentence-transformers = "^5.2.3"
+uv = "^0.11.26"
+pytest = "^9.1.1"
+langgraph-checkpoint = "^4.1.1"
+packaging = "^26.2"
+langchain-huggingface = "^1.2.2"
+sentence-transformers = "^5.6.0"
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

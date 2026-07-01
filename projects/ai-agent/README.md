@@ -30,8 +30,8 @@ It retrieves information from internal Markdown documents and supports both clou
 
 ```bash
 # 1. Create and activate a conda environment
-conda create -n langchain-python3.12 python=3.12
-conda activate langchain-python3.12
+conda create -n langchain-python3.13 python=3.13
+conda activate langchain-python3.13
 
 # 2. Install Poetry
 conda install -c conda-forge poetry poetry-plugin-export
