@@ -85,7 +85,6 @@ def get_memory_tools(file_path: str) -> list[BaseTool]:
 
         Behavior:
          - merges provided user_info into existing.user_info
-         - updates user_name if provided
          - treats any top-level unknown keys as user_info entries
         """
         try:
