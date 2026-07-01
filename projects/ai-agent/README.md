@@ -127,7 +127,7 @@ Everything runs on OpenAI's infrastructure. Simplest setup, highest accuracy.
     "collection_name": "internal_kb"
   },
   "agent": {
-    "memory_path": "../assets/bot_memory.json",
+    "memory_path": "../../assets/bot_memory.json",
     "history_window": 10
   }
 }
@@ -276,7 +276,7 @@ No API key required.
     "collection_name": "internal_kb"
   },
   "agent": {
-    "memory_path": "../assets/bot_memory.json",
+    "memory_path": "../../assets/bot_memory.json",
     "history_window": 10
   }
 }
