@@ -45,9 +45,6 @@
           - ova_url
           - ova_path
           - ova_file
-          - ova_cloud_init_path
-          - ova_cloud_init_userdata
-          - ova_cloud_init_metadata
 
     - name: Ensure critical deployment variables are not empty
       ansible.builtin.fail:
@@ -173,6 +170,7 @@
       when: vc_connection.failed
 
 - name: Upload and attach Talos ISO to VM
+  when: talos_iso_path is defined and talos_iso_path != ''
   block:
     - name: Upload Talos ISO to datastore
       community.vmware.vsphere_copy:
@@ -185,4 +183,3 @@
         datastore: "{{ hardware.datastore }}"
         path: "/iso/{{ talos_iso_path | basename }}"
       delegate_to: localhost
-  when: talos_iso_path is defined and talos_iso_path != ''

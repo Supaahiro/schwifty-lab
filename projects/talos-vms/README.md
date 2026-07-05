@@ -5,8 +5,8 @@ This repository provides an Ansible playbook to provision VMs on a VMware ESXi h
 ## Prerequisites
 
 - A running VMware ESXi hypervisor and credentials
-- Python 3.8+ and pip
-- Ansible (ansible and ansible-core)
+- Python 3.13.14 and pip
+- Ansible (ansible-core)
 - ovftool (VMware OVF Tool) for OVF/OVA conversion
 - Access to the SideroLabs Omni portal to generate/download a Talos ISO
 
@@ -40,8 +40,12 @@ source .venv/bin/activate
 Install Ansible and related tooling:
 
 ```bash
-pip install ansible==12.1.0 ansible-core==2.19.3 ansible-lint==25.9.2 pyvmomi==9 requests==2.32.5
+pip install ansible-core==2.21.1 ansible-lint==26.6.0 pyvmomi==9.1.0.0 requests==2.34.2
 ```
+
+> **Note:** install `ansible-core` here, **not** the `ansible` meta-package (the community bundle). The bundle ships ~85 collections into the environment's `site-packages/ansible_collections`; installing collections via `ansible-galaxy` below (into `~/.ansible/collections`) then leaves two copies of the same collection and `ansible-lint` warns:
+> `Another version of 'community.vmware' ... was found installed ... only the first one will be used`.
+> Keeping only `ansible-core` here makes the Galaxy install the single source of collections. If you layer a `.venv` on top of a conda env, also ensure the `ansible` bundle is **not** installed at the conda-env level (`pip uninstall ansible` in that env), otherwise its bundled collections leak in the same way.
 
 Install required Ansible collections:
 

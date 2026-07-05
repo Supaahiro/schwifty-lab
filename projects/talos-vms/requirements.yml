@@ -1,5 +1,5 @@
 collections:
   - name: community.vmware
-    version: ">=6.0.0"
+    version: "6.2.0"
   - name: vmware.vmware
-    version: ">=2.4.0"
+    version: "2.9.0"

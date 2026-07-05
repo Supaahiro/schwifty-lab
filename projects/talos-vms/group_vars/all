@@ -37,9 +37,6 @@ ova_configure_hardware: true
 ## Specifies whether the appliance should configure the network during deployment.
 ova_configure_network: true
 
-## Specifies whether the appliance should use cloud-init from VM configuration.
-ova_cloud_init: false
-
 ## Specifies a descriptive tag of the O.S. distribuited with the OVA file
 ova_os_info: "Talos v1.11.3"
 

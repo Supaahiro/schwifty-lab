@@ -36,17 +36,10 @@
         ova_deployed_to_datacenter.changed | bool and
         ova_configure_network | bool
 
-    - name: Execute cloud-init
-      ansible.builtin.include_tasks: ../tasks/cloud_init.yml
-      when: |
-        ova_deployed_to_datacenter.changed | bool and
-        ova_cloud_init | bool
-
     - name: Upload and attach Talos ISO to VM
       ansible.builtin.include_tasks: ../tasks/upload_and_attach_iso.yml
       when: |
         ova_deployed_to_datacenter.changed | bool and
-        not (ova_cloud_init | bool) and
         talos_iso_path is defined
 
     - name: Power on the deployed OVA
