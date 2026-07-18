@@ -12,6 +12,12 @@ body {
   margin: 0;
 }
 
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .topbar {
   display: flex;
   align-items: baseline;
@@ -34,7 +40,9 @@ body {
 }
 
 .container {
+  flex: 1;
   max-width: 60rem;
+  width: 100%;
   margin: 0 auto;
   padding: 1.5rem;
 }
