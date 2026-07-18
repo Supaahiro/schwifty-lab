@@ -1,0 +1,50 @@
+---
+
+- name: Deploy Ubuntu 26.04 OVA to VMware ESXI and configure it with cloud-init
+
+  vars_files:
+    - ../vault/vault-keyring.yaml
+
+  hosts:
+    - ubuntu
+
+  tasks:
+    - name: Include prerequisites tasks
+      ansible.builtin.include_tasks: ../tasks/prerequisites.yml
+
+    - name: Include download OVA tasks
+      ansible.builtin.include_tasks: ../tasks/download_ova_from_url.yml
+      when: |
+        ova_source | lower == "http" and
+        not (check_ova_file.stat.exists | bool)
+
+    - name: Deploy Vm to datacenter
+      ansible.builtin.include_tasks: ../tasks/deploy_ova_to_datacenter.yml
+      when: |
+        check_ova_file.stat.exists | bool or
+        ova_file_download.changed | bool
+
+    - name: Configure hardware
+      ansible.builtin.include_tasks: ../tasks/configure_hardware.yml
+      when: |
+        ova_deployed_to_datacenter.changed | bool and
+        ova_configure_hardware | bool
+
+    - name: Configure networks
+      ansible.builtin.include_tasks: ../tasks/configure_networks.yml
+      when: |
+        ova_deployed_to_datacenter.changed | bool and
+        ova_configure_network | bool
+
+    # Must run after "Configure networks" (the seed ISO's network-config
+    # matches the NIC by MAC address) and before power on.
+    - name: Build and attach cloud-init seed ISO
+      ansible.builtin.include_tasks: ../tasks/cloud_init.yml
+      when: |
+        ova_deployed_to_datacenter.changed | bool and
+        ova_cloud_init_enable | bool
+
+    - name: Power on the deployed OVA
+      ansible.builtin.include_tasks: ../tasks/power_on_ova.yml
+      when: ova_power_on_after_deploy | bool
+...

@@ -13,6 +13,11 @@ local:
   hosts:
     localhost:
 
+# Ubuntu 26.04 cloud-init demo VM (not part of the Talos cluster)
+ubuntu:
+  hosts:
+    ubuntu0:
+
 # All nodes which are part of the cluster (loadbalancers excluded)
 nodes:
   children:

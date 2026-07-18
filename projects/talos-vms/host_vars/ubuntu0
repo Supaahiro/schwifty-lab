@@ -1,0 +1,14 @@
+---
+
+# Networks mapping
+networks:
+  mapping: { "VM Network": "vnet0" }
+  nics:
+    - name: vnet0
+      mac: "00:50:56:00:26:04"
+
+# Static IP assigned by cloud-init (playbooks/templates/cloud-init-network-config.j2
+# matches the NIC by the MAC address above)
+vm_ip: "192.168.1.100"
+
+...

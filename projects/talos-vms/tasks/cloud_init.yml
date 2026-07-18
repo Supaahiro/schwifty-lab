@@ -1,0 +1,94 @@
+---
+##
+## Build the cloud-init NoCloud seed ISO and attach it to the VM
+##
+## Prerequisite: genisoimage must be installed on the control node.
+##
+- name: Create cloud-init build directory
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: "cloud-init-{{ inventory_hostname_short | lower }}."
+  register: cloud_init_build_dir
+  delegate_to: localhost
+
+- name: Render cloud-init user-data
+  ansible.builtin.template:
+    src: cloud-init-userdata.j2
+    dest: "{{ cloud_init_build_dir.path }}/user-data"
+    mode: "0644"
+  delegate_to: localhost
+
+- name: Render cloud-init meta-data
+  ansible.builtin.template:
+    src: cloud-init-metadata.j2
+    dest: "{{ cloud_init_build_dir.path }}/meta-data"
+    mode: "0644"
+  delegate_to: localhost
+
+# Ubuntu 26.04 compatibility: cloud-init 26.1 rejects a top-level `network:`
+# key embedded in user-data (stricter schema validation) — the network
+# configuration must be its own network-config document on the seed ISO.
+- name: Render cloud-init network-config
+  ansible.builtin.template:
+    src: cloud-init-network-config.j2
+    dest: "{{ cloud_init_build_dir.path }}/network-config"
+    mode: "0644"
+  delegate_to: localhost
+
+- name: Create empty vendor-data file
+  ansible.builtin.file:
+    path: "{{ cloud_init_build_dir.path }}/vendor-data"
+    state: touch
+    mode: "0644"
+  delegate_to: localhost
+
+- name: Build cloud-init ISO image
+  ansible.builtin.command:
+    cmd: >
+      genisoimage
+      -output {{ cloud_init_build_dir.path }}/cloud-init.iso
+      -volid cidata
+      -joliet
+      -rock
+      {{ cloud_init_build_dir.path }}/user-data
+      {{ cloud_init_build_dir.path }}/meta-data
+      {{ cloud_init_build_dir.path }}/vendor-data
+      {{ cloud_init_build_dir.path }}/network-config
+    creates: "{{ cloud_init_build_dir.path }}/cloud-init.iso"
+  delegate_to: localhost
+
+- name: Upload cloud-init ISO to datastore
+  community.vmware.vsphere_copy:
+    hostname: "{{ ova_deployment_hostname }}"
+    username: "{{ ova_deployment_username }}"
+    password: "{{ ova_deployment_password }}"
+    validate_certs: "{{ ova_validate_certs }}"
+    src: "{{ cloud_init_build_dir.path }}/cloud-init.iso"
+    datacenter: "{{ ova_deployment_datacenter | default(omit) }}"
+    datastore: "{{ hardware.datastore }}"
+    path: "/iso/cloud-init-{{ inventory_hostname_short | lower }}.iso"
+  delegate_to: localhost
+
+- name: Attach cloud-init ISO to VM CD-ROM
+  community.vmware.vmware_guest:
+    hostname: "{{ ova_deployment_hostname }}"
+    username: "{{ ova_deployment_username }}"
+    password: "{{ ova_deployment_password }}"
+    validate_certs: "{{ ova_validate_certs }}"
+    folder: "{{ ova_deployment_folder }}"
+    name: "{{ inventory_hostname_short | lower }}"
+    cdrom:
+      - type: iso
+        iso_path: "[{{ hardware.datastore }}] iso/cloud-init-{{ inventory_hostname_short | lower }}.iso"
+        controller_type: ide
+        controller_number: 1
+        unit_number: 0
+        state: present
+    state: present
+  delegate_to: localhost
+
+- name: Remove cloud-init build directory
+  ansible.builtin.file:
+    path: "{{ cloud_init_build_dir.path }}"
+    state: absent
+  delegate_to: localhost

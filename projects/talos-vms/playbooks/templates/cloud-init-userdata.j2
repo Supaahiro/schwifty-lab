@@ -1,0 +1,40 @@
+#cloud-config
+hostname: {{ inventory_hostname_short }}
+fqdn: {{ inventory_hostname_short }}.{{ vm_domain }}
+prefer_fqdn_over_hostname: true
+
+users:
+  - name: "{{ vm_user_name }}"
+    groups: [sudo]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+{% for key in vm_ssh_public_keys %}
+      - "{{ key }}"
+{% endfor %}
+
+ssh_pwauth: false
+
+package_update: false
+package_upgrade: false
+
+# Ubuntu 26.04: the `ntp` package no longer exists in the repos (dropped
+# upstream in favor of chrony/ntpsec). chrony ships preinstalled on the
+# 26.04 cloud image and is Ubuntu's recommended NTP client since 20.04.
+ntp:
+  enabled: true
+  ntp_client: chrony
+  servers:
+{% for server in ntp_servers %}
+    - {{ server }}
+{% endfor %}
+
+# NOTE: no `network:` key here. cloud-init 26.1 (bundled with Ubuntu 26.04)
+# enforces stricter schema validation and rejects network config embedded in
+# user-data — it must live in its own network-config document on the NoCloud
+# seed ISO (see cloud-init-network-config.j2).
+
+# Disable cloud-init on subsequent boots to avoid re-applying network config
+runcmd:
+  - touch /etc/cloud/cloud-init.disabled

@@ -1,0 +1,17 @@
+network:
+  version: 2
+  ethernets:
+    primary:
+      match:
+        macaddress: "{{ networks.nics[0].mac }}"
+      dhcp4: false
+      addresses:
+        - "{{ vm_ip }}/{{ vm_prefix_length }}"
+      routes:
+        - to: default
+          via: "{{ vm_gateway }}"
+      nameservers:
+        addresses:
+          - "{{ vm_dns }}"
+        search:
+          - "{{ vm_domain }}"

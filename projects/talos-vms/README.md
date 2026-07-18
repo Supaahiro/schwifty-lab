@@ -136,6 +136,41 @@ ansible-lint
 
 Enter the vault password when prompted (or use `--vault-id`).
 
+## Deploy an Ubuntu 26.04 VM with cloud-init
+
+Besides the Talos nodes, the repository includes a minimal example of provisioning an **Ubuntu 26.04 LTS** VM whose base OS configuration (hostname, user + SSH key, static network, NTP) is applied at first boot via a cloud-init **NoCloud seed ISO** built on the control node and attached to the VM's CD-ROM.
+
+Additional prerequisites:
+
+- `genisoimage` on the control node (used to build the seed ISO):
+
+```bash
+sudo apt install genisoimage
+```
+
+- The official Ubuntu cloud image OVA, placed in `ova_path` (default `/tmp/ubuntu/`):
+
+```bash
+mkdir -p /tmp/ubuntu
+curl -Lo /tmp/ubuntu/ubuntu-26.04-server-cloudimg-amd64.ova \
+  https://cloud-images.ubuntu.com/releases/26.04/release/ubuntu-26.04-server-cloudimg-amd64.ova
+```
+
+Then edit `group_vars/ubuntu` (SSH public key, gateway, DNS, domain, NTP servers) and `host_vars/ubuntu0` (MAC address, static IP), and run:
+
+```bash
+ansible-playbook -i hosts.yaml playbooks/deploy-ubuntu.yml --ask-vault-pass
+```
+
+The playbook reuses the same task chain as the Talos deploy (prerequisites, OVA deploy, hardware, network) and adds one step: it renders `user-data`, `meta-data` and `network-config` from `playbooks/templates/`, packs them into a `cidata` ISO with `genisoimage`, uploads it to the datastore and attaches it to the VM before power-on.
+
+### Ubuntu 26.04 compatibility notes
+
+Two things changed in Ubuntu 26.04 that this example deliberately accounts for:
+
+1. **`network-config` must be a separate file.** cloud-init 26.1 (bundled with Ubuntu 26.04) enforces stricter schema validation and rejects a top-level `network:` key embedded in `user-data`. On earlier releases the embedded config was silently dropped, leaving the VM on DHCP instead of its static IP. The network configuration now lives in its own `network-config` document on the seed ISO (`playbooks/templates/cloud-init-network-config.j2`).
+2. **The `ntp` package is gone — use chrony.** Ubuntu 26.04 removed the `ntp` package from its repositories (upstream dropped it in favor of chrony/ntpsec), so installing it fails with `No package matching 'ntp' is available`. chrony ships preinstalled on the 26.04 cloud image and has been Ubuntu's recommended NTP client since 20.04; the user-data template configures it through cloud-init's native `ntp:` module with `ntp_client: chrony`.
+
 ## Common variables
 
 - `ova_file`: path to the OVA template (local or remote)

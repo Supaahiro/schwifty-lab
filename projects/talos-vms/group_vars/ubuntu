@@ -1,0 +1,43 @@
+---
+
+## Overrides for the Ubuntu 26.04 cloud-init demo VM (see playbooks/deploy-ubuntu.yml)
+
+## Official Ubuntu cloud image OVA.
+## Download from https://cloud-images.ubuntu.com/releases/26.04/release/
+ova_path: "/tmp/ubuntu/"
+ova_file: "ubuntu-26.04-server-cloudimg-amd64.ova"
+
+## Descriptive tag of the O.S. distributed with the OVA file
+ova_os_info: "Ubuntu 26.04 LTS"
+
+## No Talos ISO for the Ubuntu VM (disables the ISO upload in prerequisites.yml)
+talos_iso_path: ""
+
+## Specifies whether a cloud-init NoCloud seed ISO should be built and attached
+## to the VM before power-on.
+ova_cloud_init_enable: true
+
+# Hardware configuration used during the initial VM deploy from OVA.
+# No `disks` entry: the cloud image OVA ships its own disk and we leave it untouched.
+hardware:
+  datastore: nvme1
+  num_cpus: 2
+  mem_gb: 4
+
+## Base O.S. configuration applied by cloud-init at first boot
+vm_user_name: "ubuntu"
+vm_ssh_public_keys:
+  - "ssh-ed25519 AAAA...replace-with-your-public-key"
+vm_prefix_length: 24
+vm_gateway: "192.168.1.1"
+vm_dns: "192.168.1.1"
+vm_domain: "lab.local"
+
+## Upstream NTP servers written to the chrony configuration by cloud-init.
+## Ubuntu 26.04 dropped the `ntp` package — chrony is the supported client.
+ntp_servers:
+  - ntp.ubuntu.com
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+
+...
