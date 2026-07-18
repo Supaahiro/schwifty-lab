@@ -17,6 +17,7 @@ Current projects:
 - `projects/talos-vms` — Ansible playbooks provisioning VMware ESXi VMs for Talos/Omni.
 - `projects/api-resilience` — .NET solution (client/server/contracts/logger).
 - `projects/cryptography` — documentation + a single Python test file illustrating public/private key concepts.
+- `projects/pdns-admin-lite` — FastAPI backend (Poetry) + Vue 3/Vite frontend managing PowerDNS records via its REST API; docker-compose dev stack with Caddy edge, nginx static server, and a seeded demo PowerDNS.
 
 ## Commit conventions
 

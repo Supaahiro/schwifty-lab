@@ -1,0 +1,54 @@
+name: pr-validate-pdns-admin-lite
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'projects/pdns-admin-lite/**'
+      - '.github/workflows/pr-validate-pdns-admin-lite.yml'
+  pull_request:
+    paths:
+      - 'projects/pdns-admin-lite/**'
+      - '.github/workflows/pr-validate-pdns-admin-lite.yml'
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/pdns-admin-lite/backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run tests
+        run: poetry run pytest -v
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/pdns-admin-lite/frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: projects/pdns-admin-lite/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check and build
+        run: npm run build

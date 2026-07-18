@@ -1,0 +1,72 @@
+# Dev stack for pdns-admin-lite: Caddy edge (only published port) in front of
+# the static frontend and the FastAPI backend, plus a disposable demo PowerDNS
+# seeded with an example.test. zone.
+#
+# To target a real PowerDNS instead of the demo one, set PDNS_API_URL and
+# PDNS_API_KEY in .env and start only the app services:
+#   docker compose up --build --no-deps edge frontend backend
+services:
+  edge:
+    image: caddy:2-alpine
+    ports:
+      - "${EDGE_PORT:-8080}:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      pdns-seed:
+        condition: service_completed_successfully
+
+  frontend:
+    build: ./frontend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:80/"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  backend:
+    build: ./backend
+    environment:
+      PDNS_API_URL: "${PDNS_API_URL:-http://pdns:8081/api/v1}"
+      PDNS_API_KEY: "${PDNS_API_KEY:-changeme-dev-key}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    depends_on:
+      pdns:
+        condition: service_healthy
+
+  # Demo PowerDNS: SQLite backend baked into the image, no volume on purpose —
+  # every `up` starts clean and pdns-seed makes the state deterministic.
+  pdns:
+    image: powerdns/pdns-auth-48:4.8.3
+    # PDNS_AUTH_API_KEY alone makes the image enable api+webserver on
+    # 0.0.0.0 (allow-from 0.0.0.0/0); everything else goes as CLI flags.
+    environment:
+      PDNS_AUTH_API_KEY: "${PDNS_API_KEY:-changeme-dev-key}"
+    command:
+      - "--default-soa-content=ns1.@ hostmaster.@ 0 10800 3600 604800 3600"
+    healthcheck:
+      test: ["CMD", "pdns_control", "rping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  pdns-seed:
+    image: curlimages/curl:8.11.1
+    entrypoint: ["sh", "/seed.sh"]
+    environment:
+      PDNS_API_URL: "http://pdns:8081/api/v1"
+      PDNS_API_KEY: "${PDNS_API_KEY:-changeme-dev-key}"
+    volumes:
+      - ./pdns/seed.sh:/seed.sh:ro
+    depends_on:
+      pdns:
+        condition: service_healthy
+    restart: "no"

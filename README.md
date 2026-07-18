@@ -7,6 +7,7 @@ Here you'll discover code samples, project snippets, and various experiments ins
 Some things may be polished, others experimental, but all are intended to spark new ideas.
 
 [![pr-validate-ai-agent](https://github.com/SupaaHiro/schwifty-lab/actions/workflows/pr-validate-ai-agent.yml/badge.svg)](https://github.com/SupaaHiro/schwifty-lab/actions/workflows/pr-validate-ai-agent.yml)
+[![pr-validate-pdns-admin-lite](https://github.com/SupaaHiro/schwifty-lab/actions/workflows/pr-validate-pdns-admin-lite.yml/badge.svg)](https://github.com/SupaaHiro/schwifty-lab/actions/workflows/pr-validate-pdns-admin-lite.yml)
 [![pr-validate-lint](https://github.com/SupaaHiro/schwifty-lab/actions/workflows/pr-validate-lint.yml/badge.svg)](https://github.com/SupaaHiro/schwifty-lab/actions/workflows/pr-validate-lint.yml)
 
 ## My Blog
@@ -25,6 +26,7 @@ Find companion articles for the examples in this repo on the schwifty-lab blog: 
   | [`yaml-encryption`](projects/yaml-encryption) | CLI wrapping SOPS/age to encrypt Kubernetes secret manifests |
   | [`talos-vms`](projects/talos-vms) | Ansible playbooks provisioning VMware ESXi VMs for Talos/Omni |
   | [`api-resilience`](projects/api-resilience) | .NET solution exploring API resilience patterns |
+  | [`pdns-admin-lite`](projects/pdns-admin-lite) | FastAPI + Vue 3 web UI managing PowerDNS records, Dockerized with a Caddy edge |
   | [`cryptography`](projects/cryptography) | Notes and examples on public/private key cryptography |
 
 ## How to use
@@ -46,7 +48,7 @@ start-dev.bat web
 
 - Commits go directly to `master` — no GitFlow, no `develop`/`feature` branches.
 - Commit messages are linted by [commitlint](https://commitlint.js.org/) via a Husky hook (`.commitlintrc.yml`): conventional-commit type + sentence-case subject. Run `npm install` once at the repo root so the hook is active.
-- CI (`.github/workflows/`) runs the `projects/ai-agent` test suite and YAML/PowerShell linting on every push to `master` and pull request.
+- CI (`.github/workflows/`) runs the `projects/ai-agent` and `projects/pdns-admin-lite` validation suites and YAML/PowerShell linting on every push to `master` and pull request.
 - See [`CLAUDE.md`](CLAUDE.md) for a fuller map of the repo and its conventions.
 
 ## Disclaimer

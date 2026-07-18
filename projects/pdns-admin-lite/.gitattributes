@@ -1,0 +1,2 @@
+# Shell scripts are mounted into Linux containers: CRLF would break them.
+*.sh text eol=lf

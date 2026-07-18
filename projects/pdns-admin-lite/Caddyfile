@@ -1,0 +1,12 @@
+# Edge proxy: the only service publishing a host port.
+# Plain HTTP for the POC; switch to TLS by replacing ":8080" with a hostname
+# and letting Caddy manage certificates (or "tls internal" for a local CA).
+:8080 {
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}

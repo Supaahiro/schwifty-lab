@@ -1,0 +1,31 @@
+[project]
+name = "pdns-admin-lite-backend"
+version = "0.1.0"
+description = "Minimal FastAPI adapter over the PowerDNS Authoritative REST API for the pdns-admin-lite POC."
+authors = [
+    {name = "Hiro",email = "webmaster@supaahiro.org"}
+]
+license = {text = "**No-Commercial License** (see LICENSE file)"}
+requires-python = ">=3.13,<4.0.0"
+
+[tool.poetry.dependencies]
+fastapi = "^0.139.2"
+uvicorn = {extras = ["standard"], version = "^0.51.0"}
+httpx = "^0.28.1"
+pydantic-settings = "^2.14.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^26.5.1"
+isort = "^8.0.1"
+pytest = "^9.1.1"
+respx = "^0.23.1"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+package-mode = false

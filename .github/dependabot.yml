@@ -15,6 +15,18 @@ updates:
       interval: weekly
     target-branch: "master"
 
+  - package-ecosystem: pip
+    directory: /projects/pdns-admin-lite/backend
+    schedule:
+      interval: weekly
+    target-branch: "master"
+
+  - package-ecosystem: npm
+    directory: /projects/pdns-admin-lite/frontend
+    schedule:
+      interval: weekly
+    target-branch: "master"
+
   - package-ecosystem: npm
     directory: /
     schedule:

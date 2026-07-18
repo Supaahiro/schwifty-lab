@@ -1,0 +1,206 @@
+:root {
+  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1f2933;
+  background: #f5f7fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: #102a43;
+  color: #f5f7fa;
+}
+
+.brand {
+  color: inherit;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.tagline {
+  color: #9fb3c8;
+  font-size: 0.85rem;
+}
+
+.container {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0.5rem 0;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem;
+}
+
+a {
+  color: #2160c4;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #d9e2ec;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #d9e2ec;
+  vertical-align: top;
+}
+
+th {
+  background: #e4ebf2;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.mono {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: #d9e8ff;
+  color: #1b4d91;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.muted {
+  color: #627d98;
+}
+
+.error {
+  color: #ab091e;
+  background: #ffe3e3;
+  border: 1px solid #f4b8b8;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.zone-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.zone-header button {
+  margin-left: auto;
+}
+
+button {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #2160c4;
+  border-radius: 6px;
+  background: #2160c4;
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #1b4d91;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.secondary {
+  background: #fff;
+  color: #2160c4;
+}
+
+button.danger {
+  background: #fff;
+  color: #ab091e;
+  border-color: #ab091e;
+}
+
+button.danger:hover:not(:disabled) {
+  background: #ffe3e3;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.actions button {
+  margin-right: 0.35rem;
+}
+
+.record-form {
+  background: #fff;
+  border: 1px solid #d9e2ec;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.record-form .fields {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.record-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  flex: 1 1 10rem;
+}
+
+.record-form input,
+.record-form select,
+.record-form textarea {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #bcccdc;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.record-form textarea {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
