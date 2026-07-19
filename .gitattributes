@@ -1,2 +1,22 @@
-* text=auto
-.husky/* text eol=lf
+# Enforce LF in the repository and working tree for all text files.
+# Overrides per-user core.autocrlf so line endings stay consistent on every
+# machine and on Linux CI runners (bash scripts must be LF or they break).
+#
+# BASELINE: this block (down to the marker below) is the canonical cross-repo
+# base — baseline rule 6. It is also what makes the yamllint pre-commit hook
+# (rule 3) pass on Windows checkouts: yamllint's new-lines rule expects LF,
+# and without this file core.autocrlf=true materializes CRLF YAML locally.
+* text=auto eol=lf
+
+# Windows-only script types keep CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# --- per-repo rules below this line ---------------------------------------
+# .NET solution (api-resilience) keeps CRLF per its own .editorconfig (end_of_line=crlf)
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.razor text eol=crlf
+*.slnx text eol=crlf
+*.props text eol=crlf
