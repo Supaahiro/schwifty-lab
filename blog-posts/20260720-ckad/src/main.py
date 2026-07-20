@@ -1,9 +1,10 @@
 """Minimal Kubernetes operator for the FlightBooking custom resource.
 
 Watches every FlightBooking object cluster-wide (training.example.com/v1alpha1)
-and reconciles the ones sitting in the "Pending" phase: it calls a (simulated)
-external airline reservation system to obtain a booking reference, then
-patches the object's status subresource to "Booked" with that reference and a
+and drives it through its status lifecycle: an object with no status yet is
+first initialized to "Pending", then a Pending object is reconciled by
+calling a (simulated) external airline reservation system for a booking
+reference and patching status to "Booked" with that reference and a
 confirmation message. Objects already past "Pending" are left untouched, so
 reconciliation is naturally idempotent across watch restarts.
 
@@ -11,9 +12,17 @@ This is demo/teaching code for the CKAD blog post on CRDs and operators -- it
 intentionally keeps error handling, retries and backoff minimal so the
 control loop (watch -> reconcile -> patch status) stays easy to follow.
 
-Version: 1.3.0 (2026-07-20)
+Version: 1.4.0 (2026-07-20)
 
 Changelog:
+  1.4.0 (2026-07-20) - status.phase now starts as None (no default), matching
+      what actually lands on the API server: the status subresource is wiped
+      on create, so a fresh object has no status at all until something
+      writes to /status. reconcile() now explicitly initializes phase to
+      "Pending" on first sight of such an object, instead of implicitly
+      treating "absent" the same as "Pending" -- so the Pending phase you see
+      in `k get fb --watch` is something this operator actually set, not an
+      artifact of a Python-side default that was never persisted.
   1.3.0 (2026-07-20) - Run the watch/reconcile loop on a background thread
       so Ctrl+C is noticed even while the socket is idle: the main thread's
       Thread.join(timeout=...) wakes up promptly on KeyboardInterrupt and
@@ -78,7 +87,7 @@ class FlightBookingStatus(BaseModel):
 
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
-    phase: Literal["Pending", "Booked", "Failed"] = "Pending"
+    phase: Literal["Pending", "Booked", "Failed"] | None = None
     booking_reference: str | None = None
     message: str | None = None
     processed_at: datetime | None = None
@@ -125,14 +134,37 @@ def book_flight(spec: FlightBookingSpec) -> str:
     return f"BK-{suffix}"
 
 
-def reconcile(api: client.CustomObjectsApi, booking: FlightBooking) -> None:
-    """Move a single FlightBooking object from Pending to Booked.
+def _patch_status(api: client.CustomObjectsApi, name: str, namespace: str,
+                   status: FlightBookingStatus) -> None:
+    """Patch only the status subresource -- the operator never touches
+    spec, keeping status updates isolated from user-authored fields."""
+    api.patch_namespaced_custom_object_status(
+        group=GROUP,
+        version=VERSION,
+        namespace=namespace,
+        plural=PLURAL,
+        name=name,
+        body={"status": status.model_dump(mode="json", by_alias=True)},
+    )
 
-    A no-op for any object not currently in the Pending phase, which makes
+
+def reconcile(api: client.CustomObjectsApi, booking: FlightBooking) -> None:
+    """Drive a single FlightBooking object through its status lifecycle.
+
+    A fresh object has no status at all (the status subresource is wiped on
+    create), which surfaces here as `phase is None` -- that first reconcile
+    only initializes it to "Pending" and returns, rather than assuming
+    "no status yet" already means "Pending". A later reconcile then sees the
+    now-Pending object and books it. Any other phase is a no-op, which makes
     this safe to call repeatedly for the same object (e.g. after a watch
     reconnect re-delivers ADDED/MODIFIED events).
     """
     name, namespace = booking.metadata.name, booking.metadata.namespace
+
+    if booking.status.phase is None:
+        log.info("Initializing FlightBooking %s/%s", namespace, name)
+        _patch_status(api, name, namespace, FlightBookingStatus(phase="Pending"))
+        return
 
     if booking.status.phase != "Pending":
         return
@@ -140,24 +172,13 @@ def reconcile(api: client.CustomObjectsApi, booking: FlightBooking) -> None:
     log.info("Reconciling FlightBooking %s/%s", namespace, name)
     reference = book_flight(booking.spec)
 
-    # Only the status subresource is patched -- the operator never touches
-    # spec, keeping status updates isolated from user-authored fields.
     new_status = FlightBookingStatus(
         phase="Booked",
         booking_reference=reference,
         message=f"Booking confirmed for flight {booking.spec.flight_number}",
         processed_at=datetime.now(timezone.utc),
     )
-    status_patch = {"status": new_status.model_dump(
-        mode="json", by_alias=True)}
-    api.patch_namespaced_custom_object_status(
-        group=GROUP,
-        version=VERSION,
-        namespace=namespace,
-        plural=PLURAL,
-        name=name,
-        body=status_patch,
-    )
+    _patch_status(api, name, namespace, new_status)
     log.info("FlightBooking %s/%s booked as %s", namespace, name, reference)
 
 
