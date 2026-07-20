@@ -1,0 +1,11 @@
+apiVersion: training.example.com/v1alpha1
+kind: FlightBooking
+metadata:
+  name: fb-sample-001
+spec:
+  passenger: "Ada Lovelace"
+  flightNumber: "AZ204"
+  origin: "FCO"
+  destination: "LHR"
+  departureDate: "2026-08-01"
+  seatClass: "business"

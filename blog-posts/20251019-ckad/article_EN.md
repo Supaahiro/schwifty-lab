@@ -36,7 +36,7 @@ Application Observability and Maintenance
 - [Debugging in Kubernetes](https://supaahiro.github.io/schwifty-lab/blog-posts/20260417-ckad/article_EN.html)
 
 Application Environment, Configuration and Security
-- Discover and use resources that extend Kubernetes (CRD, Operators)
+- [Discover and use resources that extend Kubernetes (CRD, Operators)](https://supaahiro.github.io/schwifty-lab/blog-posts/20260720-ckad/article_EN.html)
 - Understand authentication, authorization and admission control
 - Understand requests, limits, quotas
 - Understand ConfigMaps
