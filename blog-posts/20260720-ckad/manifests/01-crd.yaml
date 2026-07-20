@@ -1,0 +1,89 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: flightbookings.training.example.com
+spec:
+  group: training.example.com
+  names:
+    kind: FlightBooking
+    listKind: FlightBookingList
+    plural: flightbookings
+    singular: flightbooking
+    shortNames:
+      - fb
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        # Splits spec updates (by users) from status updates (by the operator).
+        status: {}
+      additionalPrinterColumns:
+        - name: Flight
+          type: string
+          jsonPath: .spec.flightNumber
+        - name: Passenger
+          type: string
+          jsonPath: .spec.passenger
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Booking Ref
+          type: string
+          jsonPath: .status.bookingReference
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - passenger
+                - flightNumber
+                - departureDate
+              properties:
+                passenger:
+                  type: string
+                  description: "Full name of the passenger."
+                flightNumber:
+                  type: string
+                  pattern: "^[A-Z]{2}[0-9]{2,4}$"
+                  description: "IATA-style flight number, e.g. AA123."
+                origin:
+                  type: string
+                  description: "Origin airport IATA code, e.g. JFK."
+                destination:
+                  type: string
+                  description: "Destination airport IATA code, e.g. LHR."
+                departureDate:
+                  type: string
+                  format: date
+                  description: "Departure date (YYYY-MM-DD)."
+                seatClass:
+                  type: string
+                  enum: ["economy", "business", "first"]
+                  default: "economy"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ["Pending", "Booked", "Failed"]
+                  default: "Pending"
+                  description: "Current lifecycle phase of the booking request."
+                bookingReference:
+                  type: string
+                  description: "Reference code assigned once the booking is confirmed."
+                message:
+                  type: string
+                  description: "Human-readable detail about the last reconciliation."
+                processedAt:
+                  type: string
+                  format: date-time
+                  description: "Timestamp of the last reconciliation by the operator."

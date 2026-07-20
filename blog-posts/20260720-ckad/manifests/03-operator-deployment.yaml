@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flightbooking-operator
+  namespace: default
+  labels:
+    app: flightbooking-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flightbooking-operator
+  template:
+    metadata:
+      labels:
+        app: flightbooking-operator
+    spec:
+      serviceAccountName: flightbooking-operator
+      containers:
+        - name: operator
+          image: flightbooking-operator:local
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: 100m
+            requests:
+              memory: 64Mi
+              cpu: 50m
