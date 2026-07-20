@@ -43,8 +43,7 @@ cd schwifty-lab/blog-posts/20260720-ckad
 To keep things concrete, we'll model a tiny flight-booking system as a Kubernetes resource:
 
 - Users (or another system) create a `FlightBooking` object describing a passenger, a flight number and a departure date.
-- The object starts in a `Pending` phase.
-- A small **operator** notices the new object, "books" the flight (in our demo, that just means generating a reference code), and updates the object's `status` to `Booked`.
+- The object starts with no status at all. A small **operator** notices it, initializes `status` to `Pending`, then "books" the flight (in our demo, that just means generating a reference code) and moves `status` to `Booked`.
 
 No airline was harmed in the making of this demo — the "booking system" is a two-second `sleep` and a random reference code. The point is the *pattern*, not the business logic.
 
@@ -169,25 +168,25 @@ Notice `PHASE` is blank, not `Pending` — even though we declared `default: "Pe
 
 This is because status is a separate *subresource*, and the main resource endpoint (the one hit by k apply/k create) always ignores and clears status on create/update — so even if you wrote status: in the manifest by hand, it would be discarded before persistence. For that reason, status does not exist at all until someone explicitly writes to /status.
 
-The default declared in the schema (default: "Pending") only kicks in when a write arrives on /status that omits that field, for example when the operator patches status without specifying phase:
+You can push a status update yourself, the same way the operator will in a moment — you just have to target the subresource explicitly:
 
 ```bash
 k patch fb fb-sample-001 --subresource=status --type=merge \
-  -p '{"status":{"phase":"Booked","bookingReference":"BK-MANUAL01"}}'
+  -p '{"status":{"phase":"Pending","bookingReference":"BK-MANUAL01"}}'
 ```
 
-> Note: On windows Command Prompt, the single quotes around the JSON payload above won't work. Use double quotes for the outer string and escape the inner quotes with backslashes, like this:
+> Note: On Windows Command Prompt, the single quotes around the JSON payload above won't work. Use double quotes for the outer string and escape the inner quotes with backslashes, like this:
 
-```powershell
- "{\"status\":{\"phase\":\"Booked\",\"bookingReference\":\"BK-MANUAL01\"}}"
+```cmd
+k patch fb fb-sample-001 --subresource=status --type=merge -p "{\"status\":{\"phase\":\"Pending\",\"bookingReference\":\"BK-MANUAL01\"}}"
 ```
 
 ```text
-NAME            FLIGHT   PASSENGER      PHASE   BOOKING REF   AGE
-fb-sample-001   AZ204    Ada Lovelace           BK-MANUAL01   3s
+NAME            FLIGHT   PASSENGER      PHASE     BOOKING REF   AGE
+fb-sample-001   AZ204    Ada Lovelace   Pending   BK-MANUAL01   3s
 ```
 
-Recreate the resource to reset it to Pending:
+Recreate the resource to reset it back to empty status — `--force` deletes and re-creates the object, so `status` is wiped again rather than reset to `Pending`:
 
 ```bash
 k replace --force -f manifests/04-sample-flightbooking.yaml
@@ -223,7 +222,7 @@ class FlightBookingStatus(BaseModel):
 
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
-    phase: Literal["Pending", "Booked", "Failed"] = "Pending"
+    phase: Literal["Pending", "Booked", "Failed"] | None = None
     booking_reference: str | None = None
     message: str | None = None
     processed_at: datetime | None = None
@@ -231,11 +230,18 @@ class FlightBookingStatus(BaseModel):
 
 `alias_generator=to_camel` is doing the actual work here: the CRD schema speaks camelCase (`flightNumber`, `bookingReference`), but idiomatic Python is snake_case. Pydantic converts both ways automatically, so the rest of the code just works with `booking.spec.flight_number` instead of raw dict indexing. Note that pydantic here is only doing typed parsing and validation of the watch payloads — it doesn't know anything about Kubernetes or reconciliation; the control loop itself is still entirely hand-rolled.
 
-Second, `reconcile()` — unchanged in spirit from a plain-dict version, just typed:
+Notice `phase` has no default — it's `None` until something sets it. That's deliberate, and matches what we saw in Step 3: a fresh object has no `status` at all, so defaulting `phase` to `"Pending"` here in Python would paper over that and make the operator think an untouched object was already `Pending`.
+
+Second, `reconcile()`, which now has to distinguish "no status yet" from "already Pending" instead of treating them as the same thing:
 
 ```python
 def reconcile(api: client.CustomObjectsApi, booking: FlightBooking) -> None:
     name, namespace = booking.metadata.name, booking.metadata.namespace
+
+    if booking.status.phase is None:
+        log.info("Initializing FlightBooking %s/%s", namespace, name)
+        _patch_status(api, name, namespace, FlightBookingStatus(phase="Pending"))
+        return
 
     if booking.status.phase != "Pending":
         return
@@ -249,19 +255,13 @@ def reconcile(api: client.CustomObjectsApi, booking: FlightBooking) -> None:
         message=f"Booking confirmed for flight {booking.spec.flight_number}",
         processed_at=datetime.now(timezone.utc),
     )
-    status_patch = {"status": new_status.model_dump(mode="json", by_alias=True)}
-    api.patch_namespaced_custom_object_status(
-        group=GROUP,
-        version=VERSION,
-        namespace=namespace,
-        plural=PLURAL,
-        name=name,
-        body=status_patch,
-    )
+    _patch_status(api, name, namespace, new_status)
     log.info("FlightBooking %s/%s booked as %s", namespace, name, reference)
 ```
 
-`model_dump(mode="json", by_alias=True)` turns `new_status` back into the camelCase dict the API server expects, so the patch body stays in sync with the typed model instead of being hand-written separately. In the watch loop, each raw event is parsed with `FlightBooking.model_validate(event["object"])` inside a `try/except ValidationError` — a malformed or unexpected object gets logged and skipped instead of crashing the operator with a raw `KeyError`.
+`_patch_status()` is a small helper shared by both branches — it just wraps `patch_namespaced_custom_object_status` with `new_status.model_dump(mode="json", by_alias=True)`, turning the typed model back into the camelCase dict the API server expects. Because both the initialization and the booking patch go through it, the patch body always stays in sync with the typed model instead of being hand-written twice. In the watch loop, each raw event is parsed with `FlightBooking.model_validate(event["object"])` inside a `try/except ValidationError` — a malformed or unexpected object gets logged and skipped instead of crashing the operator with a raw `KeyError`.
+
+One consequence worth calling out: initializing to `Pending` is itself a write to `/status`, which the watch stream reports back as a `MODIFIED` event — so `reconcile()` runs on the same object twice in quick succession, once to set `Pending` and once (a moment later, now seeing `phase == "Pending"`) to book it. That's exactly the same control loop, just fed back into itself.
 
 The remaining piece, `run()`/`_watch_loop()`, is mostly plumbing rather than anything specific to Operators: the watch/reconcile cycle runs on a background thread, with the main thread just joining it and waiting for `Ctrl+C`. That's needed because a single-threaded version would sit blocked inside the SSL socket read for up to `timeout_seconds` between events, and Python only checks for pending signals once a blocking call returns — so `Ctrl+C` would appear to do nothing until the next watch reconnect. Running the socket read on its own thread lets the main thread's `Thread.join(timeout=1)`, which does wake up promptly, call `watch.Watch.stop()` on `Ctrl+C`, force-closing the socket from the outside to unblock the worker thread immediately. Worth knowing it's there, not worth reading line by line — see `src/main.py` for the full implementation.
 
@@ -419,12 +419,13 @@ Back in another terminal:
 k get fb --watch
 ```
 
-Within a couple of seconds you should see the previously-empty `PHASE` column populate:
+Within a couple of seconds you should see the previously-empty `PHASE` column populate, passing through `Pending` on its way to `Booked`:
 
 ```text
-NAME            FLIGHT   PASSENGER      PHASE   BOOKING REF   AGE
-fb-sample-001   AZ204    Ada Lovelace                         4m12s
-fb-sample-001   AZ204    Ada Lovelace   Booked   BK-7QQ2X1     4m14s
+NAME            FLIGHT   PASSENGER      PHASE     BOOKING REF   AGE
+fb-sample-001   AZ204    Ada Lovelace                           4m12s
+fb-sample-001   AZ204    Ada Lovelace   Pending                 4m13s
+fb-sample-001   AZ204    Ada Lovelace   Booked    BK-7QQ2X1     4m15s
 ```
 
 Inspect the full object to see every field the operator wrote:
