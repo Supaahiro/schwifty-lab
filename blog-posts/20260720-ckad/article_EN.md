@@ -354,6 +354,14 @@ minikube image load flightbooking-operator:local
 
 If you're using Docker Desktop's built-in Kubernetes, skip this step entirely — it shares the same image daemon, so a locally built image is already visible to the cluster.
 
+On a bare kubeadm cluster with no `kind`/`minikube` around to do this for you — including the KillerCoda Playground from the Prerequisites — the kubelet talks to containerd directly, which has its own image store completely separate from Docker's. `docker image ls` showing your build doesn't mean containerd can see it, and the kubelet will try (and fail) to pull `flightbooking-operator:local` from Docker Hub instead. Import it into containerd's `k8s.io` namespace by hand:
+
+```bash
+docker save flightbooking-operator:local | ctr -n k8s.io images import -
+```
+
+Kubernetes will pick it up on the kubelet's normal retry/backoff — no need to delete the Pod.
+
 ## Step 7: Deploy the Operator
 
 `manifests/03-operator-deployment.yaml`:
@@ -444,20 +452,7 @@ EOF
 k get fb
 ```
 
-## Step 9: Clean-up
-
-To remove everything created in this lab:
-
-```bash
-k delete -f manifests/03-operator-deployment.yaml
-k delete -f manifests/02-rbac.yaml
-k delete fb --all
-k delete -f manifests/01-crd.yaml
-```
-
-Deleting the CRD also removes every `FlightBooking` object still on the cluster, since custom resources cannot outlive the type that defines them.
-
-## Step 10: Debug from VS Code (Optional)
+## Step 9: Debug from VS Code (Optional)
 
 If you'd rather step through `reconcile()` than read logs, VS Code's Python debugger works with no special setup: `load_kube_config()` already falls back to your local kubeconfig whenever it can't find an in-cluster one, so running `main.py` from your machine talks to the cluster exactly like `kubectl` does.
 
@@ -500,6 +495,19 @@ pip install pydantic==2.13.4
 This matches `src/requirements.txt`, so `pip install -r requirements.txt` from inside `src/` works just as well. Either way, point VS Code's interpreter (bottom-right of the window, or **Python: Select Interpreter** from the Command Palette) at the new environment before starting the debug session.
 
 One more thing to keep in mind: a locally-run debug session authenticates as *your* kubeconfig user, not as the `flightbooking-operator` ServiceAccount. If you need to validate RBAC specifically, reuse the `k auth can-i ... --subresource=status --as=...` check from Step 5.
+
+## Step 10: Clean-up
+
+To remove everything created in this lab:
+
+```bash
+k delete -f manifests/03-operator-deployment.yaml
+k delete -f manifests/02-rbac.yaml
+k delete fb --all
+k delete -f manifests/01-crd.yaml
+```
+
+Deleting the CRD also removes every `FlightBooking` object still on the cluster, since custom resources cannot outlive the type that defines them.
 
 ## Wrapping Up: What We've Covered
 
