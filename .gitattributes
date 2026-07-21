@@ -11,7 +11,11 @@
 # Windows-only script types keep CRLF.
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# PowerShell scripts, modules and manifests all keep CRLF (authored/run on Windows).
 *.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
 
 # --- per-repo rules below this line ---------------------------------------
 # .NET solution (api-resilience) keeps CRLF per its own .editorconfig (end_of_line=crlf)
