@@ -9,7 +9,7 @@ license = {text = "**No-Commercial License** (see LICENSE file)"}
 requires-python = ">=3.13,<4.0.0"
 
 [tool.poetry.dependencies]
-fastapi = "^0.139.2"
+fastapi = "^0.141.1"
 uvicorn = {extras = ["standard"], version = "^0.51.0"}
 httpx = "^0.28.1"
 pydantic-settings = "^2.14.2"
