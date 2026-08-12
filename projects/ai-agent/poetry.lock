@@ -4732,14 +4732,14 @@ test = ["Cython", "array-api-strict (>=2.3.1)", "asv", "gmpy2", "hypothesis (>=6
 
 [[package]]
 name = "sentence-transformers"
-version = "5.6.0"
+version = "5.7.0"
 description = "Embeddings, Retrieval, and Reranking"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "sentence_transformers-5.6.0-py3-none-any.whl", hash = "sha256:d2075b5e687a1611005e20ab04a6846994d51adfcf39610aed066af3c0c0b81f"},
-    {file = "sentence_transformers-5.6.0.tar.gz", hash = "sha256:0e7164d051e416c1853ade7c274ff52af3f9da0f4be7f0b83d734c27699e1057"},
+    {file = "sentence_transformers-5.7.0-py3-none-any.whl", hash = "sha256:b78141da3d8137e70d965866e2ca43190b9266f3d4d8752e250ded75e7136730"},
+    {file = "sentence_transformers-5.7.0.tar.gz", hash = "sha256:fd8c8fc35e6323631dff9f3760969ebf7980dc3cfda0ab1354bc6a774cc0e5d8"},
 ]
 
 [package.dependencies]
@@ -4747,6 +4747,7 @@ huggingface-hub = ">=0.23.0"
 numpy = ">=1.20.0"
 scikit-learn = ">=0.22.0"
 scipy = ">=1.0.0"
+tokenizers = ">=0.19"
 torch = ">=1.11.0"
 tqdm = ">=4.0.0"
 transformers = ">=4.41.0,<6.0.0"
@@ -6282,4 +6283,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0.0"
-content-hash = "a0c9fcdd697a0ff67d2a629a55bc8d1f9dfbbede574131e109ed5b76ea25e4e8"
+content-hash = "9f4badb98139b86a4d239129e50a682c99fa6504eebddf9c44a9fbf8c674b64f"
