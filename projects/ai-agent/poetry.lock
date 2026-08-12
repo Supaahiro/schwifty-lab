@@ -5517,31 +5517,31 @@ files = [
 
 [[package]]
 name = "uv"
-version = "0.11.29"
+version = "0.12.3"
 description = "An extremely fast Python package and project manager, written in Rust."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "uv-0.11.29-py3-none-linux_armv6l.whl", hash = "sha256:2dc8012a693b6bb9ec17dcb2c2345cf273ccad06ae2ab4a8c7a0833955812c75"},
-    {file = "uv-0.11.29-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:7711c46452b44332352d344b5818ad8faf04596efaf837d8114aa9984e4a9610"},
-    {file = "uv-0.11.29-py3-none-macosx_11_0_arm64.whl", hash = "sha256:257c6df4393116114f296f7a02f51db9a2117f68c3ae93bbe218fa79e6521df3"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:aa166ce529cfbce6b3afaabdc4cdbfdf9e3e3d82413c709d679ff374eb76d5e9"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.musllinux_1_1_armv7l.whl", hash = "sha256:66b250d102f0e49f3d2306353aaabb43f39da5ccfa4e84fe10ba8a25de85316c"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:606e2bc7880d70448ff4359faa43a7c71743283010262fc142e1ca9fcb6937cf"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:60e792b00f4cd6c5eadd814161cd046fa8418d83621d85d3e65aae28dc5b53ff"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:db119a3ec9d7ce42e98de3d014427d74fd92f1f7c40fc9dfe62b14601a9e83da"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:0222a51972e42bc1c132761ea027b9086d710ff5fa5199af658955bd03bee4d8"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eec03a8b63d55915694db3af4e91324b39ced49e2aeac7af37851c7eb3f470ea"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:2b49e175bfbcd8ac1e09e06f0b9d544b9e671d2cdecf753aa3fbff4d61d19317"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_31_riscv64.musllinux_1_1_riscv64.whl", hash = "sha256:91b5d1407ac8757e1757268e9d983e9e7b72eeb826808f9e2404344a6de1d3fb"},
-    {file = "uv-0.11.29-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:7d618b4a2ae2b367d20710858838344604d5b9e8c0863343d5f793142408ea11"},
-    {file = "uv-0.11.29-py3-none-musllinux_1_1_i686.whl", hash = "sha256:865f09f5de0c1913bf9ed424bcc5c1a15780d01debd4d62b8a22c8f3e9bdb420"},
-    {file = "uv-0.11.29-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:157ed0bcfef5aba9b53ff4b322e009b3261d83fbf5d9423e367a33c0416c85ac"},
-    {file = "uv-0.11.29-py3-none-win32.whl", hash = "sha256:f7e4c709397468264764f571003fd278cbd384321f5c497370c28352bdb8b6a9"},
-    {file = "uv-0.11.29-py3-none-win_amd64.whl", hash = "sha256:abc641b24be42dc5d62f63ecb3500c07a0fb3c596e407963708f59114f0816ad"},
-    {file = "uv-0.11.29-py3-none-win_arm64.whl", hash = "sha256:e245e6f95f154ae56793bfc7742ec27334a546469bba4d09c03624470ab451d2"},
-    {file = "uv-0.11.29.tar.gz", hash = "sha256:a4ca34dc3b247740e511ca7c718181d5300e7899bbef755db45bb6c993610a64"},
+    {file = "uv-0.12.3-py3-none-linux_armv6l.whl", hash = "sha256:0c0561cd369002a5968e138ea477e86507a337b3ede44f441c90d85ed2f54714"},
+    {file = "uv-0.12.3-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:0550669163cc67d5a7dc8e1702bc011e4a075a4ae52ad50891be654fc6635e0d"},
+    {file = "uv-0.12.3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7c99f2524fe4b11d74dec85cef9b4d8b725d142dec04cd237f1c06fbdae1ee54"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:ac21bea426ddf95fa76d8dc1f67350faed7b4a81951825cf2aaef99fc4144815"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.musllinux_1_1_armv7l.whl", hash = "sha256:1e569258e17a536c1bd90a68935dc8250b0ecc81ba80efd814ed169c33de0f93"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:6c8e5a2d2ce4ea511293f919357c427dab0f12104ebfdd6602727f5c38958c22"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:115e96e176fa3525ffb999572ec6041b915f15189403613ccefcc1f128f0ea0c"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:913dc068e906f459df892cac789e6e9e10ac9d6af0bbb3c36fcc09347b0c986c"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:77fa7f501baa7c4d097b0c424914d7924db8e54f882c4f40056228ecf56feb98"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1482d1462b1aecd18ee33627363fe1c63d6a194f12d40d37efc446d9e0d800a1"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:248b6b282f96f98d79dddecd1b2acd1893efd84667321f26703feffff6433211"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_31_riscv64.musllinux_1_1_riscv64.whl", hash = "sha256:9201c7a1edadb07f64b695f17eac9db2d264eeb4b888c195aa11e7908d0ebf41"},
+    {file = "uv-0.12.3-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:6114afd294411995a761c4cde0b721d550ff6d2fc2312046e8403eca6adacda5"},
+    {file = "uv-0.12.3-py3-none-musllinux_1_1_i686.whl", hash = "sha256:ba034f32abf966a101cf2434455faaf8d54dfacfff0d4b4c70d673f36e985728"},
+    {file = "uv-0.12.3-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:13535c7d40faa7821c3763f5b6c605eef8556ea16277dc1a07a21203fd3c19e4"},
+    {file = "uv-0.12.3-py3-none-win32.whl", hash = "sha256:67b639a56dd36193b55a3bcea10f9dffcab37ed3c1eb26e964e52896df0bb205"},
+    {file = "uv-0.12.3-py3-none-win_amd64.whl", hash = "sha256:aeafd6e02b9a8d8beb447040bfc57ab172bdf244208f7147b4f7bbc327135797"},
+    {file = "uv-0.12.3-py3-none-win_arm64.whl", hash = "sha256:59121ef7217567adf4af41f7d3b04e42abb0c6a11bc87c930b838f9354f9c651"},
+    {file = "uv-0.12.3.tar.gz", hash = "sha256:1eb3fea456aea47489d92e10451c9129b7dd9fd8854c4eb17020ba68489d5d9a"},
 ]
 
 [[package]]
@@ -6282,4 +6282,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0.0"
-content-hash = "a0c9fcdd697a0ff67d2a629a55bc8d1f9dfbbede574131e109ed5b76ea25e4e8"
+content-hash = "9fc783b7cae316f4b5b987860b737499c5e9eeb23da99bafb6ba45d716e3e7ce"
