@@ -1,0 +1,251 @@
+# .github/workflows/pr-validate.yml
+# Version: 1.0.0 (2026-09-10)
+#
+# Changelog:
+#   1.0.0 - Baseline: consolidates pr-validate-ai-agent.yml, pr-validate-lint.yml
+#           and pr-validate-pdns-admin-lite.yml (all three deleted) into one
+#           workflow, following the structure of Supaahiro/blog's pr-validate.yml.
+#           Two reasons beyond tidiness. First, the three workflows each carried a
+#           top-level `paths` filter, so on a PR touching none of them the checks
+#           never reported at all - branch protection leaves those stuck on
+#           'Expected' rather than passing, whereas a skipped job counts as passed.
+#           Second, api-resilience had no validation whatsoever: nuget was added to
+#           dependabot.yml, so those PRs were arriving with nothing compiling them.
+
+name: PR Validation
+
+on:
+  # Manual runs: useful after re-enabling a workflow, which otherwise stays
+  # dormant until the next PR happens to touch the right paths.
+  workflow_dispatch:
+  push:
+    branches: [master]
+  # No paths filter here on purpose: the workflow must always trigger so every
+  # job reports a conclusion (success or skipped) and required checks never hang
+  # on 'Expected'. Path-based gating happens per job below.
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -- Changed paths + cheap lints --------------------------------------------
+  # One runner for everything whose runtime is dominated by VM boot: path
+  # detection, line-ending lint, YAML lint. The per-project jobs read the filter
+  # outputs and only start when their own tree changed.
+  changes-and-lint:
+    name: Changes & Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      ai_agent: ${{ steps.filter.outputs.ai_agent }}
+      pdns_backend: ${{ steps.filter.outputs.pdns_backend }}
+      pdns_frontend: ${{ steps.filter.outputs.pdns_frontend }}
+      api_resilience: ${{ steps.filter.outputs.api_resilience }}
+      powershell: ${{ steps.filter.outputs.powershell }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            ai_agent:
+              - 'projects/ai-agent/**'
+              - '.github/versions.json'
+              - '.github/actions/toolchain/**'
+              - '.github/actions/setup-python-poetry-cached/**'
+              - '.github/workflows/pr-validate.yml'
+            pdns_backend:
+              - 'projects/pdns-admin-lite/backend/**'
+              - '.github/versions.json'
+              - '.github/actions/toolchain/**'
+              - '.github/actions/setup-python-poetry-cached/**'
+              - '.github/workflows/pr-validate.yml'
+            pdns_frontend:
+              - 'projects/pdns-admin-lite/frontend/**'
+              - '.github/versions.json'
+              - '.github/actions/toolchain/**'
+              - '.github/actions/setup-node-cached/**'
+              - '.github/workflows/pr-validate.yml'
+            api_resilience:
+              - 'projects/api-resilience/**'
+              - '.github/versions.json'
+              - '.github/actions/toolchain/**'
+              - '.github/workflows/pr-validate.yml'
+            powershell:
+              - '**/*.ps1'
+              - '**/*.psm1'
+              - '**/*.psd1'
+            yaml:
+              - '**/*.yaml'
+              - '**/*.yml'
+
+      # Ordered fastest-first so the job fails as early as possible.
+
+      # Deliberately unfiltered: a denormalized blob is not confined to any one
+      # extension, and this reads the index only, so it costs nothing.
+      - name: Check committed line endings
+        run: bash .github/scripts/check-file-encoding.sh eol
+
+      - id: toolchain
+        if: steps.filter.outputs.yaml == 'true'
+        uses: ./.github/actions/toolchain
+
+      - name: Setup Python
+        if: steps.filter.outputs.yaml == 'true'
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ steps.toolchain.outputs.python }}
+
+      - name: Lint YAML
+        if: steps.filter.outputs.yaml == 'true'
+        run: |
+          pip install yamllint
+          yamllint -c .yamllint.yml .
+
+  # -- PowerShell -------------------------------------------------------------
+  # Its own job rather than a step in changes-and-lint: it needs a pwsh shell and
+  # a PSGallery module install, which would slow that job down on every PR.
+  powershell-lint:
+    name: PowerShell - Parse & Encoding
+    needs: changes-and-lint
+    if: ${{ !cancelled() && needs.changes-and-lint.outputs.powershell == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check PowerShell scripts (BOM + parse)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -Repository PSGallery
+
+          $scripts = Get-ChildItem -Recurse -Include *.ps1, *.psm1, *.psd1 -File |
+            Where-Object { $_.FullName -notmatch '[\\/](node_modules|_site|vendor)[\\/]' }
+
+          $failed = $false
+
+          foreach ($script in $scripts) {
+            Write-Host "Checking $($script.FullName)"
+
+            # Parse-only syntax check - never executes the script.
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $script.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            foreach ($parseError in $parseErrors) {
+              Write-Host "::error file=$($script.FullName)::Parse error: $parseError"
+              $failed = $true
+            }
+
+            # BOM check via PSScriptAnalyzer.
+            $bomResults = Invoke-ScriptAnalyzer -Path $script.FullName -IncludeRule PSUseBOMForUnicodeEncodedFile
+            foreach ($result in $bomResults) {
+              Write-Host "::error file=$($script.FullName),line=$($result.Line)::$($result.Message)"
+              $failed = $true
+            }
+          }
+
+          if ($failed) {
+            exit 1
+          }
+
+  # -- ai-agent ---------------------------------------------------------------
+  ai-agent:
+    name: ai-agent - Test
+    needs: changes-and-lint
+    # '!cancelled()' so a lint failure upstream doesn't hide this job's result:
+    # the filter step runs first, so its outputs are set even when a later lint
+    # step fails.
+    if: ${{ !cancelled() && needs.changes-and-lint.outputs.ai_agent == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-python-poetry-cached
+        with:
+          working-directory: projects/ai-agent
+
+      - name: Run tests
+        working-directory: projects/ai-agent
+        run: poetry run pytest -v
+
+  # -- pdns-admin-lite --------------------------------------------------------
+  pdns-backend:
+    name: pdns-admin-lite - Backend Test
+    needs: changes-and-lint
+    if: ${{ !cancelled() && needs.changes-and-lint.outputs.pdns_backend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-python-poetry-cached
+        with:
+          working-directory: projects/pdns-admin-lite/backend
+
+      - name: Run tests
+        working-directory: projects/pdns-admin-lite/backend
+        run: poetry run pytest -v
+
+  pdns-frontend:
+    name: pdns-admin-lite - Frontend Build
+    needs: changes-and-lint
+    if: ${{ !cancelled() && needs.changes-and-lint.outputs.pdns_frontend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-node-cached
+        with:
+          working-directory: projects/pdns-admin-lite/frontend
+
+      - name: Type-check and build
+        working-directory: projects/pdns-admin-lite/frontend
+        run: npm run build
+
+  # -- api-resilience ---------------------------------------------------------
+  # New: this project had no validation at all. It became a real gap once nuget
+  # was added to dependabot.yml, since those PRs edit Directory.Packages.props
+  # with nothing checking that the solution still compiles.
+  api-resilience:
+    name: api-resilience - Build
+    needs: changes-and-lint
+    if: ${{ !cancelled() && needs.changes-and-lint.outputs.api_resilience == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: toolchain
+        uses: ./.github/actions/toolchain
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ steps.toolchain.outputs.dotnet }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('projects/api-resilience/**/*.csproj', 'projects/api-resilience/Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        working-directory: projects/api-resilience
+        run: dotnet restore
+
+      - name: Build
+        working-directory: projects/api-resilience
+        run: dotnet build --no-restore --configuration Release

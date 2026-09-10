@@ -1,0 +1,18 @@
+{
+  "_comment": [
+    "Single source of truth for toolchain versions used by CI.",
+    "Consumed by the .github/actions/toolchain composite action.",
+    "'toolchain' holds the defaults. 'branchOverrides' lets a specific branch",
+    "pin a different version; override keys are EXACT branch names (the target",
+    "branch on PRs, the pushed branch on push) and are shallow-merged over",
+    "'toolchain'. This repo has no develop branch, so overrides stay empty.",
+    "This file is repo-local — only the toolchain action itself is part of the",
+    "cross-repo shared pattern."
+  ],
+  "toolchain": {
+    "node": "24",
+    "python": "3.13",
+    "dotnet": "10.x"
+  },
+  "branchOverrides": {}
+}
