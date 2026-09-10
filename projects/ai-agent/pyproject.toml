@@ -23,6 +23,19 @@ langgraph-checkpoint = "^4.2.0"
 packaging = "^26.3"
 langchain-huggingface = "^1.2.2"
 sentence-transformers = "^6.0.1"
+# torch is pulled in by sentence-transformers, but only ever runs the CPU
+# embedding model (all-MiniLM-L6-v2). Taking it from PyPI drags in the whole
+# CUDA stack -- 29 nvidia-* wheels, ~2.5 GB -- which times out in CI.
+# Declared explicitly here purely to pin it to the CPU-only index.
+# To run on GPU instead, see "Using a GPU build of torch" in README.md.
+torch = { version = ">=2.7.1", source = "pytorch-cpu" }
+
+# priority = "explicit" means nothing is taken from this index unless a
+# dependency names it, so only torch is affected.
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [tool.poetry.group.dev.dependencies]
 black = "^26.5.1"

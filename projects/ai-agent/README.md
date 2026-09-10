@@ -51,6 +51,39 @@ poetry update
 poetry export -f requirements.txt --output requirements.txt --without-hashes
 ```
 
+### Using a GPU build of torch
+
+`sentence-transformers` pulls in `torch`, and the default PyPI wheels bundle the
+whole CUDA runtime — 29 `nvidia-*` packages, roughly 2.5 GB. The HuggingFace
+embedding model used here (`all-MiniLM-L6-v2`) runs on CPU, so `torch` is pinned
+to PyTorch's CPU-only index in `pyproject.toml`:
+
+```toml
+torch = { version = ">=2.7.1", source = "pytorch-cpu" }
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+```
+
+To run the embeddings on an NVIDIA GPU instead, point that source at the matching
+CUDA index and re-lock — `cu129` here, check <https://pytorch.org/get-started/locally/>
+for the build that matches your driver:
+
+```bash
+# in pyproject.toml, replace the source url with:
+#   url = "https://download.pytorch.org/whl/cu129"
+poetry lock
+poetry install
+```
+
+Verify with `poetry run python -c "import torch; print(torch.__version__, torch.cuda.is_available())"`.
+
+The pin is deliberate rather than incidental: without it, every CI run and every
+fresh checkout downloads the CUDA stack, which is what made the GitHub Actions
+job time out against PyPI.
+
 ---
 
 ## Configuration
