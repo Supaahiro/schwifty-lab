@@ -16,7 +16,7 @@ pydantic-settings = "^2.14.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^26.5.1"
-isort = "^8.0.1"
+isort = "^9.0.1"
 pytest = "^9.1.1"
 respx = "^0.23.1"
 
