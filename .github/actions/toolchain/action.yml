@@ -1,0 +1,72 @@
+# .github/actions/toolchain/action.yml
+# Shared pattern — keep in sync across blog and k8s-platform
+#
+# Purpose: Resolve toolchain versions (node / python / dotnet / zensical) from
+#          the repo-local .github/versions.json, applying per-branch overrides,
+#          and expose each as a step output.
+#
+# Prerequisite: caller must run actions/checkout before invoking this action
+#               (it reads $GITHUB_WORKSPACE/.github/versions.json).
+#
+# Branch resolution (which override key is applied):
+#   1. the `branch` input, if provided (manual override / testing)
+#   2. $GITHUB_BASE_REF  — set on pull_request events = the target branch
+#   3. $GITHUB_REF_NAME  — the pushed branch on push events
+# So a PR into develop is validated with develop's overrides, and a push to
+# develop builds with them too — letting you trial a tool on develop first.
+#
+# Outputs are a fixed superset; repos that don't use a tool ignore its output.
+#
+# Version: 1.0.0 (2026-07-10)
+#
+# Changelog:
+#   1.0.0 - Baseline: versions.json resolver with per-branch overrides.
+
+name: Resolve toolchain versions
+description: >
+  Reads .github/versions.json, applies the current branch's overrides on top of
+  the default toolchain, and exposes each tool version as an output.
+
+inputs:
+  branch:
+    description: "Branch whose overrides to apply. Defaults to the PR target branch, else the pushed branch."
+    required: false
+    default: ""
+
+outputs:
+  node:
+    description: "Node.js version"
+    value: ${{ steps.resolve.outputs.node }}
+  python:
+    description: "Python version"
+    value: ${{ steps.resolve.outputs.python }}
+  dotnet:
+    description: ".NET SDK version"
+    value: ${{ steps.resolve.outputs.dotnet }}
+  zensical:
+    description: "Zensical version"
+    value: ${{ steps.resolve.outputs.zensical }}
+
+runs:
+  using: composite
+  steps:
+    - id: resolve
+      shell: bash
+      env:
+        INPUT_BRANCH: ${{ inputs.branch }}
+      run: |
+        set -euo pipefail
+
+        config="${GITHUB_WORKSPACE}/.github/versions.json"
+        if [[ ! -f "$config" ]]; then
+          echo "::error::toolchain: '$config' not found — did the job run actions/checkout first?"
+          exit 1
+        fi
+
+        branch="${INPUT_BRANCH:-${GITHUB_BASE_REF:-$GITHUB_REF_NAME}}"
+        echo "Resolving toolchain for branch '$branch' from .github/versions.json"
+
+        jq -r --arg b "$branch" '
+          (.toolchain // {}) * (.branchOverrides[$b] // {})
+          | to_entries[] | "\(.key)=\(.value)"
+        ' "$config" | tee -a "$GITHUB_OUTPUT"

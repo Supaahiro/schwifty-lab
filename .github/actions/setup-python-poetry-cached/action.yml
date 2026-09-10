@@ -1,0 +1,63 @@
+# .github/actions/setup-python-poetry-cached/action.yml
+#
+# Purpose: One-stop Python environment for a Poetry project — resolve the Python
+#          version via the toolchain action, set up Python, install Poetry, and
+#          run 'poetry install' with the resolved virtualenv cached on the
+#          project's poetry.lock.
+#
+# Prerequisite: caller must run actions/checkout first (the toolchain action
+#               reads .github/versions.json and poetry install needs the lock).
+#
+# Not ported from blog: that repo uses Python only for yamllint and the docs
+# build, so it has no Poetry equivalent. Written here because two projects
+# (ai-agent, pdns-admin-lite/backend) need the identical five steps.
+#
+# Version: 1.0.0 (2026-09-10)
+#
+# Changelog:
+#   1.0.0 - Baseline: toolchain + setup-python + Poetry + cached 'poetry install'.
+
+name: Setup Python & Poetry (cached)
+description: >
+  Resolves the Python version from .github/versions.json via the toolchain
+  action, installs Poetry, and installs the given project's dependencies with
+  the virtualenv cached on its poetry.lock.
+
+inputs:
+  working-directory:
+    description: "Directory containing pyproject.toml and poetry.lock"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - id: toolchain
+      uses: ./.github/actions/toolchain
+
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ steps.toolchain.outputs.python }}
+
+    # Poetry itself is cheap to install but not free; cache it on the Python
+    # version so it is restored rather than resolved from PyPI on every run.
+    - name: Install Poetry
+      shell: bash
+      run: pipx install poetry
+
+    # Keep the virtualenv inside the project so a single cache path covers it.
+    - name: Configure Poetry
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: poetry config virtualenvs.in-project true
+
+    # The lock hash is the whole key: any dependency change misses the cache and
+    # reinstalls, which is exactly when a stale venv would be wrong.
+    - uses: actions/cache@v4
+      with:
+        path: ${{ inputs.working-directory }}/.venv
+        key: poetry-${{ runner.os }}-${{ steps.toolchain.outputs.python }}-${{ hashFiles(format('{0}/poetry.lock', inputs.working-directory)) }}
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: poetry install

@@ -1,0 +1,43 @@
+# .github/actions/setup-node-cached/action.yml
+#
+# Purpose: One-stop Node environment for a package directory — resolve the
+#          Node version via the toolchain action, run actions/setup-node with
+#          the npm cache keyed on the directory's lockfile, then 'npm ci'.
+#
+# Prerequisite: caller must run actions/checkout first (the toolchain action
+#               reads .github/versions.json and npm ci needs the lockfile).
+#
+# Version: 1.0.0 (2026-07-16)
+#
+# Changelog:
+#   1.0.0 - Baseline: toolchain + setup-node (npm cache) + npm ci, extracted
+#           from the pr-validate.yml frontend job and the _build-and-release
+#           e2e job (Phase 3).
+
+name: Setup Node (cached)
+description: >
+  Resolves the Node version from .github/versions.json via the toolchain
+  action, sets up Node with the npm cache keyed on the given directory's
+  package-lock.json, and installs dependencies with npm ci.
+
+inputs:
+  working-directory:
+    description: "Directory containing package.json and package-lock.json"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - id: toolchain
+      uses: ./.github/actions/toolchain
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ steps.toolchain.outputs.node }}
+        cache: "npm"
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci

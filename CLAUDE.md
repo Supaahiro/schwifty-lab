@@ -29,13 +29,19 @@ Commits are enforced by commitlint via a Husky `commit-msg` hook (`.husky/commit
 
 ## CI
 
-`.github/workflows/`:
-- `pr-validate-ai-agent.yml` — runs `poetry install` + `pytest` for `projects/ai-agent`, triggered on push to `master` and on pull requests touching `projects/ai-agent/**`. `pyproject.toml` sets `[tool.pytest.ini_options] pythonpath = ["."]` — without it, `poetry run pytest` (the bare console-script entry point) doesn't add the project root to `sys.path`, and `core`/`main`/`tools` imports fail in CI even though they work locally via `python -m pytest`.
-- `pr-validate-lint.yml` — two jobs: `yamllint -c .yamllint.yml .` repo-wide, and a PowerShell check (`.ps1`/`.psm1`/`.psd1`) that parses every script via `[System.Management.Automation.Language.Parser]::ParseFile()` (never executes them) and checks BOM encoding via PSScriptAnalyzer's `PSUseBOMForUnicodeEncodedFile` rule.
+**`.github/workflows/pr-validate.yml`** is the single validation workflow, structured after the sibling `blog` repo's. It has **no top-level `paths` filter on purpose**: the workflow always triggers so every job reports a conclusion. Path gating happens per job, via `dorny/paths-filter` outputs from the `changes-and-lint` job. That distinction matters for branch protection — a path-filtered *workflow* leaves required checks stuck on `Expected`, which never resolves, while a *skipped job* counts as passed.
 
-`.github/actions/` and `.github/scripts/` are intentionally empty (see their `README.md`): only extract a composite action or script once something is actually reused or a single step grows past ~3 sub-steps — a lone `poetry install && pytest` stays inline in its workflow.
+Jobs: `changes-and-lint` (paths filter + repo-wide line-ending check + yamllint), `powershell-lint`, `ai-agent`, `pdns-backend`, `pdns-frontend`, `api-resilience`. The per-project jobs are gated with `!cancelled()` so a lint failure upstream doesn't hide their results.
 
-`.github/dependabot.yml` tracks `github-actions`, `pip` (`projects/ai-agent`), and `npm` (root `package.json`), weekly, targeting `master`. No `bundler` entry: the root `Gemfile` has a local path dependency (`blog-jekyll-theme`, a sibling repo) that Dependabot's isolated environment can never reach, which fails every run for that ecosystem outright.
+- `ai-agent` — `pyproject.toml` sets `[tool.pytest.ini_options] pythonpath = ["."]`; without it, `poetry run pytest` (the bare console-script entry point) doesn't add the project root to `sys.path`, and `core`/`main`/`tools` imports fail in CI even though they work locally via `python -m pytest`.
+- `powershell-lint` — parses every `.ps1`/`.psm1`/`.psd1` via `[System.Management.Automation.Language.Parser]::ParseFile()` (never executes them) and checks BOM encoding via PSScriptAnalyzer's `PSUseBOMForUnicodeEncodedFile` rule. Kept as its own job because it needs a `pwsh` shell and a PSGallery install.
+- `api-resilience` — `dotnet restore` + `dotnet build -c Release`. Added when `nuget` was added to `dependabot.yml`: until then this project had no validation at all.
+
+`.github/versions.json` is the single source of truth for node/python/dotnet versions, read by the `toolchain` composite action. Bump a toolchain version there, not in the workflow.
+
+`.github/actions/` holds `toolchain`, `setup-node-cached` and `setup-python-poetry-cached`; `.github/scripts/` holds `check-file-encoding.sh`. See their `README.md` for the sync contract with `blog`/`k8s-platform` and for when to add a new one. `toolchain/action.yml` and `check-file-encoding.sh` are kept byte-identical with the `blog` copies.
+
+`.github/dependabot.yml` tracks `github-actions`, `pip`, `nuget` and `npm` weekly, targeting `master`. Major bumps are ignored for pip/npm/nuget via a single `dependency-name: "*"` rule per entry — they arrive as a burst of PRs all touching the same lockfile, so each merge invalidates the others; majors are bumped by hand. `github-actions` is exempt because it is grouped into one PR and never conflicts. Entries use `directories` (plural) to cover several projects per ecosystem: `directory: /` would not work, as it does not recurse and the repo root holds no pip or nuget manifest. No `bundler` entry: the root `Gemfile` has a local path dependency (`blog-jekyll-theme`, a sibling repo) that Dependabot's isolated environment can never reach, which fails every run for that ecosystem outright.
 
 ## Common commands
 
