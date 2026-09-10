@@ -20,7 +20,7 @@ numexpr = "^2.14.2"
 grandalf = "^0.8"
 uv = "^0.12.10"
 langgraph-checkpoint = "^4.2.0"
-packaging = "^26.2"
+packaging = "^26.3"
 langchain-huggingface = "^1.2.2"
 sentence-transformers = "^6.0.1"
 
