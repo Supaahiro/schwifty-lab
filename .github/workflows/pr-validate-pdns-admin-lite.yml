@@ -1,6 +1,8 @@
 name: pr-validate-pdns-admin-lite
 
 on:
+  # Manual runs: these validations have no other on-demand trigger.
+  workflow_dispatch:
   push:
     branches: [master]
     paths:
