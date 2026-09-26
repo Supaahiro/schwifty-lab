@@ -231,12 +231,12 @@ jobs:
         uses: ./.github/actions/toolchain
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ steps.toolchain.outputs.dotnet }}
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('projects/api-resilience/**/*.csproj', 'projects/api-resilience/Directory.Packages.props') }}
