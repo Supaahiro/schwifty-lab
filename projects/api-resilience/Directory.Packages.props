@@ -13,7 +13,7 @@
     <!-- ApiResilience.Logger -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.12" />
     <!-- ApiResilience.Server -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.16.7" />
