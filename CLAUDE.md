@@ -31,7 +31,7 @@ or dependency graph across the projects. The blog is published at
 |---|---|
 | `_posts/`, `_config.yml`, `_config.local.yml`, `Gemfile` | Blog content, Jekyll configuration, and Ruby dependencies |
 | `blog-posts/` | Per-article examples, including Kubernetes manifests and Helm charts |
-| `projects/ai-agent/` | Python/Poetry LangGraph agent with retrieval and persistent memory |
+| `projects/ai-agent/` | Python/uv LangGraph agent with retrieval and persistent memory |
 | `projects/code-sign/` | PowerShell Authenticode signing toolkit |
 | `projects/yaml-encryption/` | Python CLI wrapping SOPS and age |
 | `projects/talos-vms/` | Ansible provisioning for Talos/Omni virtual machines |
@@ -57,7 +57,8 @@ by changed paths and also checks YAML and committed line endings. The workflow i
 `.github/workflows/pr-validate.yml`; project jobs cover PowerShell syntax and
 encoding, the AI agent, the PowerDNS backend and frontend, and the .NET example.
 
-The AI agent and PowerDNS backend use pytest through Poetry. The PowerDNS frontend
+The AI agent uses pytest through uv; the PowerDNS backend uses pytest through
+Poetry. The PowerDNS frontend
 runs `npm run build`; the .NET example runs a Release build. PowerShell validation
 parses scripts and checks encoding without executing the scripts.
 
@@ -65,7 +66,7 @@ The AI agent's history, memory, and knowledge-base tests do not need a live mode
 provider. The knowledge-base tests may download a HuggingFace embedding model on
 first use. The application's interactive session requires configured credentials
 or a reachable local provider. Its pytest configuration sets `pythonpath = ["."]`
-so imports work when running `poetry run pytest`.
+so imports work when running `uv run pytest`.
 Repeat checks after relevant changes or to investigate a failure.
 
 ## Essential commands
@@ -89,14 +90,14 @@ pip install yamllint
 yamllint -c .yamllint.yml .
 ```
 
-From `projects/ai-agent/`, in its Python environment:
+From `projects/ai-agent/`:
 
 ```powershell
-poetry install
-poetry run pytest
-poetry run pytest tests/test_history.py -v
-poetry run pytest tests/test_memory.py::test_update_memory_merges_user_info
-python main.py
+uv sync
+uv run pytest
+uv run pytest tests/test_history.py -v
+uv run pytest tests/test_memory.py::test_update_memory_merges_user_info
+uv run python main.py
 ```
 
 The interactive command requires `config.json` and the applicable `.env`
@@ -111,4 +112,5 @@ Husky and commitlint; scopes are lowercase and subjects use sentence-case with a
 are in `.github/actions/README.md` and `.github/scripts/README.md`; the
 toolchain action and encoding script follow the copies in `Supaahiro/blog`.
 Dependency update configuration lives in `.github/dependabot.yml`; Bundler
-updates are omitted because the theme is a local path dependency.
+updates are omitted because the theme is a local path dependency. The AI agent's
+updates use the `uv` ecosystem and arrive grouped in a single PR.

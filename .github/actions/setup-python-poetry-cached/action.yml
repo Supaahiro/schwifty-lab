@@ -9,12 +9,14 @@
 #               reads .github/versions.json and poetry install needs the lock).
 #
 # Not ported from blog: that repo uses Python only for yamllint and the docs
-# build, so it has no Poetry equivalent. Written here because two projects
-# (ai-agent, pdns-admin-lite/backend) need the identical five steps.
+# build, so it has no Poetry equivalent. Written when two projects (ai-agent,
+# pdns-admin-lite/backend) needed the identical five steps; ai-agent has since
+# moved to uv, leaving pdns-admin-lite/backend as the only caller.
 #
-# Version: 1.0.0 (2026-09-10)
+# Version: 1.0.1 (2026-10-03)
 #
 # Changelog:
+#   1.0.1 - Comment only: ai-agent moved to uv and no longer uses this action.
 #   1.0.0 - Baseline: toolchain + setup-python + Poetry + cached 'poetry install'.
 
 name: Setup Python & Poetry (cached)

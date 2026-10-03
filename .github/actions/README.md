@@ -26,8 +26,10 @@ carries this repo's own node/python/dotnet versions and an empty
 `branchOverrides` (there is no `develop` branch here).
 
 `setup-python-poetry-cached/` has no counterpart in `blog`, where Python only
-serves yamllint and the docs build. It was written here because two projects
-(`ai-agent`, `pdns-admin-lite/backend`) need the identical five steps.
+serves yamllint and the docs build. It was written here when two projects
+(`ai-agent`, `pdns-admin-lite/backend`) needed the identical five steps;
+`ai-agent` has since moved to uv and sets it up inline with
+`astral-sh/setup-uv`, so `pdns-admin-lite/backend` is the only caller.
 
 ## When to add one
 

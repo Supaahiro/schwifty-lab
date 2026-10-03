@@ -4,6 +4,8 @@
 # bumped by hand, one project at a time. Deliberately a single "*" rule per entry
 # rather than per-package ones.
 # github-actions is exempt: it is grouped into one PR, so it never conflicts.
+# The uv entry (ai-agent) keeps the major-version ignore but is also grouped
+# into one PR, for the same reason as github-actions.
 #
 # Note the plural `directories`: it lets one entry (and so one ignore rule) cover
 # every project of an ecosystem. `directory: /` would NOT work here -- it does not
@@ -19,9 +21,20 @@ updates:
         patterns: ["*"]
     target-branch: "master"
 
+  - package-ecosystem: uv
+    directory: /projects/ai-agent
+    schedule:
+      interval: weekly
+    groups:
+      ai-agent:
+        patterns: ["*"]
+    target-branch: "master"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: pip
     directories:
-      - /projects/ai-agent
       - /projects/pdns-admin-lite/backend
     schedule:
       interval: weekly

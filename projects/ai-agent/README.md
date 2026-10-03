@@ -19,8 +19,8 @@ It retrieves information from internal Markdown documents and supports both clou
 
 ## Prerequisites
 
-- Python `>=3.12`
-- [Poetry](https://python-poetry.org/)
+- Python `>=3.13` (uv can install it for you)
+- [uv](https://docs.astral.sh/uv/)
 - **OpenAI mode**: an OpenAI API key
 - **Local mode**: a running [llama.cpp server](https://github.com/ggerganov/llama.cpp) or compatible runtime
 
@@ -29,27 +29,38 @@ It retrieves information from internal Markdown documents and supports both clou
 ## Quick Setup
 
 ```bash
-# 1. Create and activate a conda environment
+# Creates .venv in the project folder and installs the locked dependencies
+# (including the dev group)
+uv sync
+```
+
+Run commands inside that environment with `uv run`, e.g. `uv run pytest` or
+`uv run python main.py`.
+
+#### Installing into a conda environment instead
+
+`uv sync` ignores an active conda environment and always targets `.venv`. To
+install into conda, point uv at it explicitly:
+
+```bash
 conda create -n langchain-python3.13 python=3.13
 conda activate langchain-python3.13
-
-# 2. Install Poetry
-conda install -c conda-forge poetry poetry-plugin-export
-
-# 3. Disable Poetry's own virtualenv (using conda's instead)
-poetry config virtualenvs.create false
-
-# 4. Install dependencies
-poetry install
+UV_PROJECT_ENVIRONMENT="$CONDA_PREFIX" uv sync --inexact
 ```
+
+`--inexact` keeps packages that are not in `uv.lock` (conda's own, for example);
+without it uv removes them to match the lockfile exactly.
 
 ### Update dependencies
 
 ```bash
-poetry show --outdated
-poetry update
-poetry export -f requirements.txt --output requirements.txt --without-hashes
+uv tree --outdated --depth 1
+uv lock --upgrade
+uv sync
+uv export --format requirements.txt --no-hashes --output-file requirements.txt
 ```
+
+Dependabot proposes the same updates weekly, grouped into a single PR.
 
 ### Using a GPU build of torch
 
@@ -59,26 +70,27 @@ embedding model used here (`all-MiniLM-L6-v2`) runs on CPU, so `torch` is pinned
 to PyTorch's CPU-only index in `pyproject.toml`:
 
 ```toml
-torch = { version = ">=2.7.1", source = "pytorch-cpu" }
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
 
-[[tool.poetry.source]]
+[[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
+explicit = true
 ```
 
-To run the embeddings on an NVIDIA GPU instead, point that source at the matching
+To run the embeddings on an NVIDIA GPU instead, point that index at the matching
 CUDA index and re-lock — `cu129` here, check <https://pytorch.org/get-started/locally/>
 for the build that matches your driver:
 
 ```bash
-# in pyproject.toml, replace the source url with:
+# in pyproject.toml, replace the index url with:
 #   url = "https://download.pytorch.org/whl/cu129"
-poetry lock
-poetry install
+uv lock
+uv sync
 ```
 
-Verify with `poetry run python -c "import torch; print(torch.__version__, torch.cuda.is_available())"`.
+Verify with `uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available())"`.
 
 The pin is deliberate rather than incidental: without it, every CI run and every
 fresh checkout downloads the CUDA stack, which is what made the GitHub Actions
@@ -341,7 +353,7 @@ OPENAI_API_KEY=sk-...
 ## Running the Agent
 
 ```bash
-python main.py
+uv run python main.py
 ```
 
 Example session:
