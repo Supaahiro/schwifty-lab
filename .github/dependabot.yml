@@ -33,16 +33,6 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
 
-  - package-ecosystem: pip
-    directories:
-      - /projects/pdns-admin-lite/backend
-    schedule:
-      interval: weekly
-    target-branch: "master"
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-
   - package-ecosystem: nuget
     directories:
       - /projects/api-resilience
@@ -56,7 +46,6 @@ updates:
   - package-ecosystem: npm
     directories:
       - /
-      - /projects/pdns-admin-lite/frontend
     schedule:
       interval: weekly
     target-branch: "master"

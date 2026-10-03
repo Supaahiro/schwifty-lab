@@ -1,7 +1,10 @@
 # .github/workflows/pr-validate.yml
-# Version: 1.1.0 (2026-10-03)
+# Version: 1.2.0 (2026-10-03)
 #
 # Changelog:
+#   1.2.0 - pdns-admin-lite moved to its own repository
+#           (Supaahiro/pdns-admin-lite): its backend and frontend jobs and path
+#           filters are removed.
 #   1.1.0 - ai-agent moved from Poetry to uv: its job sets up uv directly with
 #           astral-sh/setup-uv instead of setup-python-poetry-cached, which now
 #           serves pdns-admin-lite/backend only.
@@ -47,8 +50,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       ai_agent: ${{ steps.filter.outputs.ai_agent }}
-      pdns_backend: ${{ steps.filter.outputs.pdns_backend }}
-      pdns_frontend: ${{ steps.filter.outputs.pdns_frontend }}
       api_resilience: ${{ steps.filter.outputs.api_resilience }}
       powershell: ${{ steps.filter.outputs.powershell }}
     steps:
@@ -62,18 +63,6 @@ jobs:
               - 'projects/ai-agent/**'
               - '.github/versions.json'
               - '.github/actions/toolchain/**'
-              - '.github/workflows/pr-validate.yml'
-            pdns_backend:
-              - 'projects/pdns-admin-lite/backend/**'
-              - '.github/versions.json'
-              - '.github/actions/toolchain/**'
-              - '.github/actions/setup-python-poetry-cached/**'
-              - '.github/workflows/pr-validate.yml'
-            pdns_frontend:
-              - 'projects/pdns-admin-lite/frontend/**'
-              - '.github/versions.json'
-              - '.github/actions/toolchain/**'
-              - '.github/actions/setup-node-cached/**'
               - '.github/workflows/pr-validate.yml'
             api_resilience:
               - 'projects/api-resilience/**'
@@ -195,41 +184,6 @@ jobs:
       - name: Run tests
         working-directory: projects/ai-agent
         run: uv run --locked pytest -v
-
-  # -- pdns-admin-lite --------------------------------------------------------
-  pdns-backend:
-    name: pdns-admin-lite - Backend Test
-    needs: changes-and-lint
-    if: ${{ !cancelled() && needs.changes-and-lint.outputs.pdns_backend == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: ./.github/actions/setup-python-poetry-cached
-        with:
-          working-directory: projects/pdns-admin-lite/backend
-
-      - name: Run tests
-        working-directory: projects/pdns-admin-lite/backend
-        run: poetry run pytest -v
-
-  pdns-frontend:
-    name: pdns-admin-lite - Frontend Build
-    needs: changes-and-lint
-    if: ${{ !cancelled() && needs.changes-and-lint.outputs.pdns_frontend == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: ./.github/actions/setup-node-cached
-        with:
-          working-directory: projects/pdns-admin-lite/frontend
-
-      - name: Type-check and build
-        working-directory: projects/pdns-admin-lite/frontend
-        run: npm run build
 
   # -- api-resilience ---------------------------------------------------------
   # New: this project had no validation at all. It became a real gap once nuget

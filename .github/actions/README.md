@@ -7,7 +7,6 @@ convention used in the `blog` and `k8s-platform` sibling repos.
 | --- | --- |
 | `toolchain/` | Resolves node / python / dotnet versions from `.github/versions.json`, applying per-branch overrides, and exposes each as an output. |
 | `setup-node-cached/` | `toolchain` + `actions/setup-node` (npm cache keyed on the directory's lockfile) + `npm ci`. |
-| `setup-python-poetry-cached/` | `toolchain` + `actions/setup-python` + Poetry + `poetry install`, with the in-project virtualenv cached on `poetry.lock`. |
 
 `toolchain/` is the one piece under a cross-repo sync contract: it is kept
 **byte-identical** with the copies in `blog` and `k8s-platform`, so the three can
@@ -24,12 +23,6 @@ be diffed against each other. Two consequences of that, both deliberate:
 `.github/versions.json` is repo-local and **not** part of that contract — it
 carries this repo's own node/python/dotnet versions and an empty
 `branchOverrides` (there is no `develop` branch here).
-
-`setup-python-poetry-cached/` has no counterpart in `blog`, where Python only
-serves yamllint and the docs build. It was written here when two projects
-(`ai-agent`, `pdns-admin-lite/backend`) needed the identical five steps;
-`ai-agent` has since moved to uv and sets it up inline with
-`astral-sh/setup-uv`, so `pdns-admin-lite/backend` is the only caller.
 
 ## When to add one
 

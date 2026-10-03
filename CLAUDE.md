@@ -37,7 +37,6 @@ or dependency graph across the projects. The blog is published at
 | `projects/talos-vms/` | Ansible provisioning for Talos/Omni virtual machines |
 | `projects/api-resilience/` | .NET client, server, contracts, and logging example |
 | `projects/cryptography/` | Cryptography explanations and Python examples |
-| `projects/pdns-admin-lite/` | FastAPI and Vue application for PowerDNS administration |
 | `.github/` | Validation workflow, dependency updates, actions, and scripts |
 
 The AI agent selects chat and embedding providers through `config.json`,
@@ -55,12 +54,11 @@ See `projects/ai-agent/README.md` for setup and configuration.
 Validate the affected project using its own toolchain. CI selects project jobs
 by changed paths and also checks YAML and committed line endings. The workflow is
 `.github/workflows/pr-validate.yml`; project jobs cover PowerShell syntax and
-encoding, the AI agent, the PowerDNS backend and frontend, and the .NET example.
+encoding, the AI agent, and the .NET example.
 
-The AI agent uses pytest through uv; the PowerDNS backend uses pytest through
-Poetry. The PowerDNS frontend
-runs `npm run build`; the .NET example runs a Release build. PowerShell validation
-parses scripts and checks encoding without executing the scripts.
+The AI agent uses pytest through uv; the .NET example runs a Release build.
+PowerShell validation parses scripts and checks encoding without executing the
+scripts.
 
 The AI agent's history, memory, and knowledge-base tests do not need a live model
 provider. The knowledge-base tests may download a HuggingFace embedding model on
