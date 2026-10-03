@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.12" />
     <!-- ApiResilience.Server -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.12" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.13" />
     <!-- Analyzers -->
     <PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning" Version="3.2.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.401" />
