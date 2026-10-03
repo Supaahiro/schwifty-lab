@@ -8,46 +8,48 @@ authors = [
 license = {text = "**No-Commercial License** (see LICENSE file)"}
 readme = "README.md"
 requires-python = ">=3.13,<4.0.0"
+dependencies = [
+    "python-dotenv>=1.2.3,<2",
+    "langchain>=1.3.14,<2",
+    "langchain-openai>=1.6.2,<2",
+    "langchain-community>=0.4.2,<0.5",
+    "langgraph>=1.2.11,<2",
+    "langchain-chroma>=1.1.0,<2",
+    "numexpr>=2.14.2,<3",
+    "grandalf>=0.8,<0.9",
+    "uv>=0.12.18,<0.13",
+    "langgraph-checkpoint>=4.2.0,<5",
+    "packaging>=26.3,<27",
+    "langchain-huggingface>=1.2.2,<2",
+    "sentence-transformers>=6.1.0,<7",
+    # torch is pulled in by sentence-transformers, but only ever runs the CPU
+    # embedding model (all-MiniLM-L6-v2). Taking it from PyPI drags in the whole
+    # CUDA stack -- 29 nvidia-* wheels, ~2.5 GB -- which times out in CI.
+    # Declared explicitly here purely to pin it to the CPU-only index (see
+    # [tool.uv.sources] below).
+    # To run on GPU instead, see "Using a GPU build of torch" in README.md.
+    "torch>=2.7.1",
+]
 
-[tool.poetry.dependencies]
-python-dotenv = "^1.2.3"
-langchain = "^1.3.14"
-langchain-openai = "^1.6.2"
-langchain-community = "^0.4.2"
-langgraph = "^1.2.11"
-langchain-chroma = "^1.1.0"
-numexpr = "^2.14.2"
-grandalf = "^0.8"
-uv = "^0.12.18"
-langgraph-checkpoint = "^4.2.0"
-packaging = "^26.3"
-langchain-huggingface = "^1.2.2"
-sentence-transformers = "^6.1.0"
-# torch is pulled in by sentence-transformers, but only ever runs the CPU
-# embedding model (all-MiniLM-L6-v2). Taking it from PyPI drags in the whole
-# CUDA stack -- 29 nvidia-* wheels, ~2.5 GB -- which times out in CI.
-# Declared explicitly here purely to pin it to the CPU-only index.
-# To run on GPU instead, see "Using a GPU build of torch" in README.md.
-torch = { version = ">=2.7.1", source = "pytorch-cpu" }
+[dependency-groups]
+dev = [
+    "black>=26.5.1,<27",
+    "isort>=8.0.1,<9",
+    "pytest>=9.1.1,<10",
+]
 
-# priority = "explicit" means nothing is taken from this index unless a
-# dependency names it, so only torch is affected.
-[[tool.poetry.source]]
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+# explicit = true means nothing is taken from this index unless a source names
+# it, so only torch is affected.
+[[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
-
-[tool.poetry.group.dev.dependencies]
-black = "^26.5.1"
-isort = "^8.0.1"
-pytest = "^9.1.1"
+explicit = true
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry]
-package-mode = false

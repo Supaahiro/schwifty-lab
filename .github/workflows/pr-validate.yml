@@ -1,7 +1,10 @@
 # .github/workflows/pr-validate.yml
-# Version: 1.0.0 (2026-09-10)
+# Version: 1.1.0 (2026-10-03)
 #
 # Changelog:
+#   1.1.0 - ai-agent moved from Poetry to uv: its job sets up uv directly with
+#           astral-sh/setup-uv instead of setup-python-poetry-cached, which now
+#           serves pdns-admin-lite/backend only.
 #   1.0.0 - Baseline: consolidates pr-validate-ai-agent.yml, pr-validate-lint.yml
 #           and pr-validate-pdns-admin-lite.yml (all three deleted) into one
 #           workflow, following the structure of Supaahiro/blog's pr-validate.yml.
@@ -59,7 +62,6 @@ jobs:
               - 'projects/ai-agent/**'
               - '.github/versions.json'
               - '.github/actions/toolchain/**'
-              - '.github/actions/setup-python-poetry-cached/**'
               - '.github/workflows/pr-validate.yml'
             pdns_backend:
               - 'projects/pdns-admin-lite/backend/**'
@@ -171,13 +173,28 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: ./.github/actions/setup-python-poetry-cached
+      - id: toolchain
+        uses: ./.github/actions/toolchain
+
+      # setup-uv installs the Python version itself and caches uv's package
+      # cache keyed on uv.lock, so no separate setup-python or actions/cache.
+      # Full version tag: setup-uv publishes no floating major tag (v10).
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
+          python-version: ${{ steps.toolchain.outputs.python }}
           working-directory: projects/ai-agent
+          enable-cache: true
+          cache-dependency-glob: projects/ai-agent/uv.lock
+
+      # --locked fails if uv.lock is out of date with pyproject.toml instead of
+      # silently re-resolving.
+      - name: Install dependencies
+        working-directory: projects/ai-agent
+        run: uv sync --locked
 
       - name: Run tests
         working-directory: projects/ai-agent
-        run: poetry run pytest -v
+        run: uv run --locked pytest -v
 
   # -- pdns-admin-lite --------------------------------------------------------
   pdns-backend:
