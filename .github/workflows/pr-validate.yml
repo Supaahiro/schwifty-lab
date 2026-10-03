@@ -178,7 +178,8 @@ jobs:
 
       # setup-uv installs the Python version itself and caches uv's package
       # cache keyed on uv.lock, so no separate setup-python or actions/cache.
-      - uses: astral-sh/setup-uv@v10
+      # Full version tag: setup-uv publishes no floating major tag (v10).
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: ${{ steps.toolchain.outputs.python }}
           working-directory: projects/ai-agent
