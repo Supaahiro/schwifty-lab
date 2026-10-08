@@ -3,6 +3,7 @@ assets/*[-_]memory.json
 .idea
 scaffolding
 .claude
+.agents
 
 # Jekyll
 _site
