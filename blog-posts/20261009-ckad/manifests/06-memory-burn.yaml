@@ -1,0 +1,35 @@
+# Intentionally OOMKilled: allocate 256 MiB with a 32 MiB memory limit.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-burn
+  namespace: ckad-resources
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: app
+      image: python:3.13-alpine
+      command: ["python", "-c"]
+      args:
+        - |
+          import time
+          print("Allocating 256 MiB with a 32 MiB limit", flush=True)
+          data = bytearray(256 * 1024 * 1024)
+          time.sleep(60)
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 16Mi
+        limits:
+          cpu: 250m
+          memory: 32Mi

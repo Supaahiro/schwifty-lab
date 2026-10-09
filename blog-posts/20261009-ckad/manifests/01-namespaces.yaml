@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ckad-resources
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ckad-resource-policy
