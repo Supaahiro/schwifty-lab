@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-config-v1
+  namespace: ckad-configmaps
+immutable: true
+data:
+  APP_MODE: changed
