@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+  namespace: ckad-configmaps
+data:
+  APP_MODE: lab
+  LOG_LEVEL: info
+  RETRY_COUNT: "3"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-files
+  namespace: ckad-configmaps
+data:
+  application.properties: |
+    greeting=Hello from a ConfigMap
+    color=blue
