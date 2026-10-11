@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: scratch-worker
+  namespace: ckad-requirements
+spec:
+  automountServiceAccountToken: false
+  containers:
+    - name: worker
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+          ephemeral-storage: 16Mi
+        limits:
+          cpu: 100m
+          memory: 32Mi
+          ephemeral-storage: 64Mi
+      volumeMounts:
+        - name: scratch
+          mountPath: /scratch
+  volumes:
+    - name: scratch
+      emptyDir:
+        sizeLimit: 32Mi

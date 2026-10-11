@@ -40,7 +40,7 @@ Application Environment, Configuration and Security
 - [Understand authentication, authorization and admission control](https://supaahiro.github.io/schwifty-lab/blog-posts/20261008-ckad/article_EN.html)
 - [Understand requests, limits, quotas](https://supaahiro.github.io/schwifty-lab/blog-posts/20261009-ckad/article_EN.html)
 - [Understand ConfigMaps](https://supaahiro.github.io/schwifty-lab/blog-posts/20261010-ckad/article_EN.html)
-- Define resource requirements
+- [Define resource requirements](https://supaahiro.github.io/schwifty-lab/blog-posts/20261011-ckad/article_EN.html)
 - Create & consume Secrets
 - Understand ServiceAccounts
 - Understand Application Security (SecurityContexts, Capabilities, etc.)

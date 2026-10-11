@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-best-effort
+  namespace: ckad-requirements
+  labels:
+    exercise: qos
+spec:
+  automountServiceAccountToken: false
+  containers:
+    - name: worker
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-guaranteed
+  namespace: ckad-requirements
+  labels:
+    exercise: qos
+spec:
+  automountServiceAccountToken: false
+  containers:
+    - name: app
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 32Mi
+    - name: helper
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 16Mi
+        limits:
+          cpu: 50m
+          memory: 16Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-mixed
+  namespace: ckad-requirements
+  labels:
+    exercise: qos
+spec:
+  automountServiceAccountToken: false
+  containers:
+    - name: app
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 32Mi
+    - name: helper
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]

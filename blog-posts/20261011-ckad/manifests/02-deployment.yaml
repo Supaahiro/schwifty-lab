@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: requirements-web
+  namespace: ckad-requirements
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: requirements-web
+  template:
+    metadata:
+      labels:
+        app: requirements-web
+    spec:
+      automountServiceAccountToken: false
+      initContainers:
+        - name: prepare
+          image: busybox:1.37.0
+          command: ["sh", "-c"]
+          args:
+            - "printf 'Resource requirements lab\n' > /www/index.html"
+          resources:
+            requests:
+              cpu: 600m
+              memory: 64Mi
+            limits:
+              cpu: 800m
+              memory: 128Mi
+          volumeMounts:
+            - name: content
+              mountPath: /www
+      containers:
+        - name: app
+          image: busybox:1.37.0
+          command: ["httpd", "-f", "-p", "8080", "-h", "/www"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 2
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - name: content
+              mountPath: /www
+              readOnly: true
+        - name: helper
+          image: busybox:1.37.0
+          command: ["sh", "-c"]
+          args:
+            - |
+              while true; do
+                if wget -q -O /dev/null http://127.0.0.1:8080/; then
+                  echo "HTTP check passed"
+                fi
+                sleep 10
+              done
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+      volumes:
+        - name: content
+          emptyDir:
+            sizeLimit: 16Mi
