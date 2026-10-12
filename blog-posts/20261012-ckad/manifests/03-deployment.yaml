@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-reader
+  namespace: ckad-secrets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secret-reader
+  template:
+    metadata:
+      labels:
+        app: secret-reader
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: app
+          image: busybox:1.37
+          command: ["sh", "-c", "sleep infinity"]
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: PASSWORD
+          envFrom:
+            - prefix: IMPORTED_
+              secretRef:
+                name: app-credentials
+          volumeMounts:
+            - name: credentials
+              mountPath: /etc/demo-credentials
+              readOnly: true
+            - name: credentials
+              mountPath: /etc/demo-password
+              subPath: password
+              readOnly: true
+          resources:
+            requests:
+              cpu: 5m
+              memory: 8Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: credentials
+          secret:
+            secretName: app-credentials
+            defaultMode: 0440
+            items:
+              - key: USERNAME
+                path: username
+              - key: PASSWORD
+                path: password
