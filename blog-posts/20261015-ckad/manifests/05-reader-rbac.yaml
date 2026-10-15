@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: read-demo-settings
+  namespace: ckad-serviceaccounts
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["demo-settings"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-demo-settings
+  namespace: ckad-serviceaccounts
+subjects:
+  - kind: ServiceAccount
+    name: config-reader
+    namespace: ckad-serviceaccounts
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: read-demo-settings
