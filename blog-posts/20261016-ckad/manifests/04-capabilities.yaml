@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: capability-lab
+  namespace: ckad-security
+spec:
+  nodeSelector:
+    kubernetes.io/os: linux
+  automountServiceAccountToken: false
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: no-caps
+      image: busybox:1.37
+      command: ["sh", "-c", "exec sleep 86400"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      volumeMounts:
+        - name: no-caps-data
+          mountPath: /work
+    - name: chown-only
+      image: busybox:1.37
+      command: ["sh", "-c", "exec sleep 86400"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+          add: ["CHOWN"]
+      volumeMounts:
+        - name: chown-data
+          mountPath: /work
+  volumes:
+    - name: no-caps-data
+      emptyDir: {}
+    - name: chown-data
+      emptyDir: {}

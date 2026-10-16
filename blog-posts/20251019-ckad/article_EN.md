@@ -43,7 +43,7 @@ Application Environment, Configuration and Security
 - [Define resource requirements](https://supaahiro.github.io/schwifty-lab/blog-posts/20261011-ckad/article_EN.html)
 - [Create & consume Secrets](https://supaahiro.github.io/schwifty-lab/blog-posts/20261012-ckad/article_EN.html)
 - [Understand ServiceAccounts](https://supaahiro.github.io/schwifty-lab/blog-posts/20261015-ckad/article_EN.html)
-- Understand Application Security (SecurityContexts, Capabilities, etc.)
+- [Understand Application Security (SecurityContexts, Capabilities, etc.)](https://supaahiro.github.io/schwifty-lab/blog-posts/20261016-ckad/article_EN.html)
 
 Services and Networking
 - Demonstrate basic understanding of NetworkPolicies
