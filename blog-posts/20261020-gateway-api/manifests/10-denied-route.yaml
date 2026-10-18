@@ -1,0 +1,15 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: outsider
+  namespace: gateway-outsider
+spec:
+  parentRefs:
+    - name: edge
+      namespace: gateway-infra
+      sectionName: http
+  hostnames: ["blocked.gateway.test"]
+  rules:
+    - backendRefs:
+        - name: outsider
+          port: 80
