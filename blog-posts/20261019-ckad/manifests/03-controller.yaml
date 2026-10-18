@@ -1,0 +1,78 @@
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: ckad-ingress
+spec:
+  controller: traefik.io/ingress-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-controller
+  namespace: ckad-ingress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingress-controller
+  template:
+    metadata:
+      labels:
+        app: ingress-controller
+    spec:
+      serviceAccountName: ingress-controller
+      nodeSelector:
+        kubernetes.io/os: linux
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: traefik
+          image: traefik:v3.7.15
+          args:
+            - --providers.kubernetesingress=true
+            - --providers.kubernetesingress.namespaces=ckad-ingress
+            - --providers.kubernetesingress.ingressclass=ckad-ingress
+            - --providers.kubernetesingress.strictprefixmatching=true
+            - --entrypoints.web.address=:8000
+            - --entrypoints.websecure.address=:8443
+            - --entrypoints.websecure.http.tls=true
+            - --entrypoints.health.address=:8082
+            - --ping=true
+            - --ping.entrypoint=health
+            - --accesslog=true
+          ports:
+            - name: web
+              containerPort: 8000
+            - name: websecure
+              containerPort: 8443
+            - name: health
+              containerPort: 8082
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: health
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-controller
+  namespace: ckad-ingress
+spec:
+  selector:
+    app: ingress-controller
+  ports:
+    - name: http
+      port: 80
+      targetPort: web
+    - name: https
+      port: 443
+      targetPort: websecure

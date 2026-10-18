@@ -1,0 +1,6 @@
+spec:
+  tls:
+    - hosts:
+        - shop.ckad.test
+        - admin.ckad.test
+      secretName: ingress-lab-tls
