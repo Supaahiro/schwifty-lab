@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: storefront
+  namespace: ckad-ingress
+spec:
+  ingressClassName: ckad-ingress
+  rules:
+    - host: shop.ckad.test
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80
+    - host: admin.ckad.test
+      http:
+        paths:
+          - path: /status
+            pathType: Exact
+            backend:
+              service:
+                name: api
+                port:
+                  number: 80

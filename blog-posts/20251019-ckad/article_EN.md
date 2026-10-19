@@ -48,7 +48,7 @@ Application Environment, Configuration and Security
 Services and Networking
 - [Demonstrate basic understanding of NetworkPolicies](https://supaahiro.github.io/schwifty-lab/blog-posts/20261017-ckad/article_EN.html)
 - [Provide and troubleshoot access to applications via services](https://supaahiro.github.io/schwifty-lab/blog-posts/20261018-ckad/article_EN.html)
-- Use Ingress rules to expose applications
+- [Use Ingress rules to expose applications](https://supaahiro.github.io/schwifty-lab/blog-posts/20261019-ckad/article_EN.html)
 
 I know there are a lot of topics, but we'll address them one by one with practical examples.
 
