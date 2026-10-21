@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway-infra
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway-store
+  labels:
+    gateway-access: shop
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway-outsider
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway-shared

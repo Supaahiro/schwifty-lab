@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-controller
+  namespace: gateway-infra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-controller
+  template:
+    metadata:
+      labels:
+        app: gateway-controller
+    spec:
+      serviceAccountName: gateway-controller
+      nodeSelector:
+        kubernetes.io/os: linux
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: traefik
+          image: traefik:v3.7.15
+          args:
+            - --providers.kubernetesgateway=true
+            - --providers.kubernetesgateway.namespaces=gateway-infra,gateway-store,gateway-outsider,gateway-shared
+            - --entrypoints.web.address=:8000
+            - --entrypoints.health.address=:8082
+            - --ping=true
+            - --ping.entrypoint=health
+            - --accesslog=true
+          ports:
+            - name: web
+              containerPort: 8000
+            - name: health
+              containerPort: 8082
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: health
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-controller
+  namespace: gateway-infra
+spec:
+  selector:
+    app: gateway-controller
+  ports:
+    - name: http
+      port: 80
+      targetPort: web
